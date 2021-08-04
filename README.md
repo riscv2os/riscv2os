@@ -1,4 +1,4 @@
-# riscv2os
+# riscv2os -- RISC-V 處理器上的 UNIX 作業系統
 
 
-從 RISC-V 處理器到 UNIXv6 作業系統
+
