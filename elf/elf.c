@@ -1,36 +1,13 @@
 #include "elf.h"
 
-enum {
-    EM_ARM = 40,
-    EM_IA_64 = 50,
-    EM_RISCV = 243,
-};
+char *elf_str(elf_t *e, int offset) {
+  return &e->stab[offset];
+}
 
-enum {
-    ELFCLASS32 = 1,
-    ELFCLASS64 = 2,
-};
-
-enum {
-    PT_NULL = 0,
-    PT_LOAD = 1,
-    PT_DYNAMIC = 2,
-    PT_INTERP = 3,
-    PT_NOTE = 4,
-    PT_SHLIB = 5,
-    PT_PHDR = 6,
-    PT_TLS = 7,
-};
-
-enum {
-    STT_NOTYPE = 0,
-    STT_OBJECT = 1,
-    STT_FUNC = 2,
-    STT_SECTION = 3,
-    STT_FILE = 4,
-    STT_COMMON = 5,
-    STT_TLS = 6,
-};
+char *elf_section(elf_t *e, int si) {
+  struct Elf32_Shdr *h = &e->shdrs[si];
+  return &e->rawdata[h->sh_offset];
+}
 
 bool elf_valid(elf_t *e) {
   // 檢查 ELF 魔數
@@ -49,12 +26,11 @@ void elf_print_hdr(elf_t *e) {
 }
 
 void elf_print_shdrs(elf_t *e) {
-  printf("\nSection Headers:\n");
+  printf("\nSection Headers:(type: 1=PROGBITS, 2=SYMTAB, 3=STRTAB)\n");
   printf("  [Nr] Name                 Type            Address          Off    Size   ES Flg Lk Inf Al\n");
-
   for (int i=0; i < e->hdr->e_shnum; i++) {
     struct Elf32_Shdr *h = &e->shdrs[i];
-    char *name = &e->stab[h->sh_name];
+    char *name = elf_str(e, h->sh_name);
     printf("       %-20s %-15x %016lx %06lx %06lx %02lx %3lx %2d %3d %2ld\n", name, h->sh_type, h->sh_addr, h->sh_offset, h->sh_size, h->sh_entsize, h->sh_flags, h->sh_link, h->sh_info, h->sh_addralign);
   }
 }
@@ -87,6 +63,30 @@ void elf_print_header(elf_t *e) {
   elf_print_stab(e);
 }
 
+void hex_dump(char *b, int len) {
+  for (int i=0; i<len; i++) {
+    printf("%02x ", (uint8_t) b[i]);
+    if (i >= 200) {
+      printf("...");
+      break;
+    }
+  }
+  printf("\n");
+}
+
+void elf_dump_section(elf_t *e, int si) {
+  printf("%s\n", elf_str(e, e->shdrs[si].sh_name));
+  char *s = elf_section(e, si);
+  hex_dump(s, e->shdrs[si].sh_size);
+  printf("\n");
+}
+
+void elf_dump_body(elf_t *e) {
+  for (int si=0; si< e->hdr->e_shnum; si++) {
+    elf_dump_section(e, si);
+  }
+}
+
 bool elf_load(elf_t *e, const char *path)
 {
     FILE *file = fopen(path, "rb");
@@ -107,5 +107,6 @@ bool elf_load(elf_t *e, const char *path)
     e->stab = (char *) &e->rawdata[sh->sh_offset];
 
     elf_print_header(e);
+    elf_dump_body(e);
     return true;
 }

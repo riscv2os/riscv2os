@@ -36,9 +36,6 @@ struct Elf32_Sym {
     Elf32_Half st_shndx;
 };
 
-
-#define ELF_ST_TYPE(x) (((unsigned int) x) & 0xf)
-
 struct Elf32_Hdr {
     uint8_t e_ident[EI_NIDENT];
     Elf32_Half e_type;
@@ -95,7 +92,58 @@ struct Elf32 {
 
 typedef struct Elf32 elf_t;
 
-/* Open an ELF file from specified path */
 bool elf_load(elf_t *e, const char *path);
-/* Load the ELF file into a memory abstraction */
-// bool elf_load(elf_t *e, struct riscv_t *rv, memory_t *mem);
+
+enum {
+    EM_ARM = 40,
+    EM_IA_64 = 50,
+    EM_RISCV = 243,
+};
+
+enum {
+    ELFCLASS32 = 1,
+    ELFCLASS64 = 2,
+};
+
+enum {
+    PT_NULL = 0,
+    PT_LOAD = 1,
+    PT_DYNAMIC = 2,
+    PT_INTERP = 3,
+    PT_NOTE = 4,
+    PT_SHLIB = 5,
+    PT_PHDR = 6,
+    PT_TLS = 7,
+};
+
+enum {
+    STT_NOTYPE = 0,
+    STT_OBJECT = 1,
+    STT_FUNC = 2,
+    STT_SECTION = 3,
+    STT_FILE = 4,
+    STT_COMMON = 5,
+    STT_TLS = 6,
+};
+
+enum {
+  SHT_NULL = 0,
+  SHT_PROGBITS = 1,
+  SHT_SYMTAB = 2,
+  SHT_STRTAB = 3,
+  SHT_RELA = 4,
+  SHT_HASH = 5,
+  SHT_DYNAMIC = 6,
+  SHT_NOTE = 7,
+  SHT_NOBITS = 8,
+  SHT_REL = 9,
+  SHT_SHLIB = 10,
+  SHT_DYNSYM = 11,
+  SHT_LOPROC = 0x70000000,
+  SHT_HIPROC = 0x7fffffff,
+  SHT_LOUSER = 0x80000000,
+  SHT_HIUSER = 0xffffffff,
+};
+
+// #define ELF_ST_TYPE(x) (((unsigned int) x) & 0xf)
+
