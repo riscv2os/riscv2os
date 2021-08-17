@@ -82,13 +82,17 @@ struct Elf32_Shdr {
 struct Elf32 {
     FILE *file;
     char rawdata[NRAW]; // 真正的資料
-    Elf32_Word rawsize;
+    int  rawsize;
     // 以下為 pointer
     struct Elf32_Hdr  *hdr;
     struct Elf32_Shdr *shdrs;
     struct Elf32_Phdr *phdrs;
     char *stab;
 };
+
+typedef struct Elf32 elf_t;
+
+bool elf_load(elf_t *e, const char *path);
 
 enum {
     EM_ARM = 40,
@@ -141,19 +145,5 @@ enum {
   SHT_HIUSER = 0xffffffff,
 };
 
-struct Elf_Section {
-    char *name;
-    uint8_t *body;
-    Elf32_Off offset;
-    Elf32_Word size;
-    Elf32_Addr addr;
-};
+// #define ELF_ST_TYPE(x) (((unsigned int) x) & 0xf)
 
-typedef struct Elf_Section elf_section_t; 
-typedef struct Elf32 elf_t;
-
-bool elf_load(elf_t *e, const char *path);
-void elf_print_header(elf_t *e);
-void elf_dump_body(elf_t *e);
-void elf_dump(elf_t *e);
-elf_section_t elf_section(elf_t *e, char *name);

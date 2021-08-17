@@ -4,32 +4,9 @@ char *elf_str(elf_t *e, int offset) {
   return &e->stab[offset];
 }
 
-int elf_find_section(elf_t *e, char *name) {
-  for (int si=0; si< e->hdr->e_shnum; si++) {
-    char *tname = elf_str(e, e->shdrs[si].sh_name);
-    if (strcmp(name, tname)==0)
-      return si;
-  }
-  return -1;
-}
-
-elf_section_t elf_get_section(elf_t *e, int si) {
-  elf_section_t s;
-  if (si > e->hdr->e_shnum || si < 0) {
-    s.body = NULL;
-  } else {
-    struct Elf32_Shdr *h = &e->shdrs[si];
-    s.name = elf_str(e, e->shdrs[si].sh_name);
-    s.body = &e->rawdata[h->sh_offset];
-    s.addr = e->shdrs[si].sh_addr;
-    s.size = e->shdrs[si].sh_size;
-  }
-  return s;
-}
-
-elf_section_t elf_section(elf_t *e, char *name) {
-  int si = elf_find_section(e, name);
-  return elf_get_section(e, si);
+char *elf_section(elf_t *e, int si) {
+  struct Elf32_Shdr *h = &e->shdrs[si];
+  return &e->rawdata[h->sh_offset];
 }
 
 bool elf_valid(elf_t *e) {
@@ -42,13 +19,13 @@ bool elf_valid(elf_t *e) {
   return true;
 }
 
-void elf_dump_hdr(elf_t *e) {
+void elf_print_hdr(elf_t *e) {
   struct Elf32_Hdr *h = e->hdr;
   printf("ELF:\n  type:%d \t(1=ELF32, 2=ELF64)\n  machine:%d \t(40=ARM, 50=IA_64, 243=RISCV)\n  version:%d\n  flags:%d\n  entry:0x%x\n",
                 h->e_type, h->e_machine, h->e_version, h->e_flags, h->e_entry);
 }
 
-void elf_dump_shdrs(elf_t *e) {
+void elf_print_shdrs(elf_t *e) {
   printf("\nSection Headers:(type: 1=PROGBITS, 2=SYMTAB, 3=STRTAB)\n");
   printf("  [Nr] Name                 Type            Address          Off    Size   ES Flg Lk Inf Al\n");
   for (int i=0; i < e->hdr->e_shnum; i++) {
@@ -58,7 +35,7 @@ void elf_dump_shdrs(elf_t *e) {
   }
 }
 
-void elf_dump_phdrs(elf_t *e) {
+void elf_print_phdrs(elf_t *e) {
   printf("\nProgram Headers: (type: 1=LOAD, 2=DYNAMIC, ... SHLIB=5 ...)\n");
   printf("  Type           Offset   VirtAddr           PhysAddr           FileSiz  MemSiz   Flg Align\n");
 
@@ -68,38 +45,39 @@ void elf_dump_phdrs(elf_t *e) {
   }
 }
 
-void elf_dump_header(elf_t *e) {
-  elf_dump_hdr(e);
-  elf_dump_shdrs(e);
-  elf_dump_phdrs(e);
-}
-
-void str_dump(char *b, int len) {
-  for (int i=0; i<len; i++) {
-    char ch = b[i];
+void elf_print_stab(elf_t *e) {
+  struct Elf32_Shdr *h=&e->shdrs[e->hdr->e_shstrndx];
+  printf("\nstring table:\n");
+  for (int i=0; i<h->sh_size; i++) {
+    char ch = e->stab[i];
     if (ch == '\0') ch = ' ';
     printf("%c", ch);
   }
+  printf("\n");
 }
 
-void hex_dump(uint8_t *b, int len) {
+void elf_print_header(elf_t *e) {
+  elf_print_hdr(e);
+  elf_print_shdrs(e);
+  elf_print_phdrs(e);
+  elf_print_stab(e);
+}
+
+void hex_dump(char *b, int len) {
   for (int i=0; i<len; i++) {
-    printf("%02x ", b[i]);
-    if (i >= 100) {
+    printf("%02x ", (uint8_t) b[i]);
+    if (i >= 200) {
       printf("...");
       break;
     }
   }
+  printf("\n");
 }
 
 void elf_dump_section(elf_t *e, int si) {
-  elf_section_t s = elf_get_section(e, si);
-  printf("%s\n", s.name);
-  if (strcmp(s.name, ".strtab")==0 || strcmp(s.name, ".shstrtab")==0 || strcmp(s.name, ".riscv.attributes")==0) {
-    str_dump(s.body, s.size);
-  } else {
-    hex_dump(s.body, s.size);
-  }
+  printf("%s\n", elf_str(e, e->shdrs[si].sh_name));
+  char *s = elf_section(e, si);
+  hex_dump(s, e->shdrs[si].sh_size);
   printf("\n");
 }
 
@@ -107,11 +85,6 @@ void elf_dump_body(elf_t *e) {
   for (int si=0; si< e->hdr->e_shnum; si++) {
     elf_dump_section(e, si);
   }
-}
-
-void elf_dump(elf_t *e) {
-  elf_dump_header(e);
-  elf_dump_body(e);
 }
 
 bool elf_load(elf_t *e, const char *path)
@@ -133,5 +106,7 @@ bool elf_load(elf_t *e, const char *path)
     struct Elf32_Shdr *sh = &e->shdrs[e->hdr->e_shstrndx];
     e->stab = (char *) &e->rawdata[sh->sh_offset];
 
+    elf_print_header(e);
+    elf_dump_body(e);
     return true;
 }
