@@ -1,5 +1,5 @@
 CC = gcc
-TARGET = riscvdump
+TARGET = ./dasm
 LIB = ../elf/elf.c riscv.c
 
 all: $(TARGET)

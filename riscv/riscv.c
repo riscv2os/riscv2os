@@ -1,102 +1,109 @@
 #include "riscv.h"
 
-/*
-    INST_6_2
-    // clang-format off
-    TABLE_TYPE jump_table[] = {
-    //  000         001           010        011           100         101        110   111
-        OP(load),   OP(load_fp),  OP(unimp), OP(misc_mem), OP(op_imm), OP(auipc), OP(unimp), OP(unimp), // 00
-        OP(store),  OP(store_fp), OP(unimp), OP(amo),      OP(op),     OP(lui),   OP(unimp), OP(unimp), // 01
-        OP(madd),   OP(msub),     OP(nmsub), OP(nmadd),    OP(fp),     OP(unimp), OP(unimp), OP(unimp), // 10
-        OP(branch), OP(jalr),     OP(unimp), OP(jal),      OP(system), OP(unimp), OP(unimp), OP(unimp), // 11
-    };
-*/
+// CSR 列表參考 https://people.eecs.berkeley.edu/~krste/papers/riscv-privileged-v1.9.1.pdf 2.2 CSR Listing
+// The RISC-V Instruction Set Manual, Volume II: Privileged Architecture, Privileged Architecture Version 1.9.1
+#define NCSR 0x1000
 
-static bool rv_dasm_rtype(uint32_t inst, char *str, uint32_t group) {
-    const uint32_t rd = dec_rd(inst);
-    const uint32_t funct3 = dec_funct3(inst);
-    const uint32_t rs1 = dec_rs1(inst);
-    const uint32_t rs2 = dec_rs2(inst);
-    const uint32_t funct7 = dec_funct7(inst);
+char *r_name[] = {"x0", "ra", "sp", "gp", "tp", "t0", "t1", "t2", 
+                  "s0", "s1", "a0", "a1", "a2", "a3", "a4", "a5", 
+                  "a6", "a7", "s2", "s3", "s4", "s5", "s6", "s7", 
+                  "s8", "s9", "s10", "s11", "t3", "t4", "t5", "t6" };
 
-    char imm = (group == 0b00100)?'i':' ';
-    char *op = "???";
-    char *i_op[] = { "add", "sll", "slt", "sltu", "xor", "srl", "or", "and" }; 
-    char *m_op[] = { "mul", "mulh", "mulhsh", "mulhu", "div", "divu", "rem", "remu" };
-    switch (funct7) {
-    case 0b0000000: // RV32I instructions
-        op = i_op[funct3];
-        break;
-    case 0b0000001: // RV32M instructions
-        op = m_op[funct3];
-        break;
-    case 0b0100000: // RV32I instructions
-        switch (funct3) {
-        case 0b000:  // SUB
-            op = "sub";
-            break;
-        case 0b101:  // SRA
-            op = "sra";
-            break;
-        }
-    }
-    sprintf(str, "%5s%c %d %d %d", op, imm, rd, rs1, rs2);
-}
+char *csr_name[NCSR];
 
-static bool rv_dasm_itype(uint32_t inst, char *str, uint32_t group) {
-}
-
-static bool rv_dasm_stype(uint32_t inst, char *str, uint32_t group) {
-}
-
-static bool rv_dasm_btype(uint32_t inst, char *str, uint32_t group) {
-}
-
-static bool rv_dasm_utype(uint32_t inst, char *str, uint32_t group) {
-}
-
-static bool rv_dasm_jtype(uint32_t inst, char *str, uint32_t group) {
-}
-
-static bool rv_dasm(uint32_t inst, char *str)
-{
-    uint32_t group = (inst & INST_6_2) >> 2;
-    switch (group) {
-        case 0b01100: // r-type
-        case 0b00100:
-            rv_dasm_rtype(inst, str, group);
-            break;
-        /*
-        case : // i-type
-            rv_dasm_itype(inst, str, group);
-            break;
-        case : // s-type
-            rv_dasm_stype(inst, str, group);
-            break;
-        case : // i-type
-            rv_dasm_btype(inst, str, group);
-            break;
-        case : // i-type
-            rv_dasm_utype(inst, str, group);
-            break;
-        case : // i-type
-            rv_dasm_jtype(inst, str, group);
-            break;
-        */
-        default:
-            sprintf(str, "xxx");
-    }
-    printf("group=%05x ", group);
-    return true;
-}
-
-bool rv_decode(uint8_t *code, int addr, int size) {
-    char line[256];
-    for (uint8_t *p = code; p<code+size; p += sizeof(uint32_t)) {
-        // uint32_t ir = p[0] | (p[1]<<8) | (p[2]<<16) | (p[3]<<24);
-        uint32_t ir = * (uint32_t*) p;
-        if (ir == 0) continue;
-        rv_dasm(ir, line);
-        printf("%09x: %08x %s\n", addr+p-code, ir, line);
-    }
+void csr_init() {
+memset(csr_name, 0, sizeof(char*)*NCSR);
+// User Trap Setup
+CSR_DEF(0x000, "ustatus"); // User status register.
+CSR_DEF(0x004, "uie"); // User interrupt-enable register.
+CSR_DEF(0x005, "utvec"); // User trap handler base address.
+// User Trap Handling
+CSR_DEF(0x040, "uscratch"); // Scratch register for user trap handlers.
+CSR_DEF(0x041, "uepc"); // User exception program counter.
+CSR_DEF(0x042, "ucause"); // User trap cause.
+CSR_DEF(0x043, "ubadaddr"); // User bad address.
+CSR_DEF(0x044, "uip"); // User interrupt pending.
+// User Floating-Point CSRs
+CSR_DEF(0x001, "fflags"); // Floating-Point Accrued Exceptions.
+CSR_DEF(0x002, "frm"); // Floating-Point Dynamic Rounding Mode.
+CSR_DEF(0x003, "fcsr"); // Floating-Point Control and Status Register (frm + fflags).
+// User Counter/Timers
+CSR_DEF(0xC00, "cycle"); // Cycle counter for RDCYCLE instruction.
+CSR_DEF(0xC01, "time"); // Timer for RDTIME instruction.
+CSR_DEF(0xC02, "instret"); // Instructions-retired counter for RDINSTRET instruction.
+// CSR_DEF(0xC03, "hpmcounter0-31"); // Performance-monitoring counter.
+CSR_DEF(0xC80, "cycleh"); // Upper 32 bits of cycle, RV32I only.
+CSR_DEF(0xC81, "timeh"); // Upper 32 bits of time, RV32I only.
+CSR_DEF(0xC82, "instreth"); // Upper 32 bits of instret, RV32I only.
+// CSR_DEF(0xC83, "hpmcounter3-31h Upper 32 bits of hpmcounter3, RV32I only.
+// Supervisor Trap Setup
+CSR_DEF(0x100, "sstatus"); //  Supervisor status register.
+CSR_DEF(0x102, "sedeleg"); //  Supervisor exception delegation register.
+CSR_DEF(0x103, "sideleg"); //  Supervisor interrupt delegation register.
+CSR_DEF(0x104, "sie"); //  Supervisor interrupt-enable register.
+CSR_DEF(0x105, "stvec"); //  Supervisor trap handler base address.
+// Supervisor Trap Handling
+CSR_DEF(0x140, "sscratch"); //  Scratch register for supervisor trap handlers.
+CSR_DEF(0x141, "sepc"); //  Supervisor exception program counter.
+CSR_DEF(0x142, "scause"); //  Supervisor trap cause.
+CSR_DEF(0x143, "sbadaddr"); //  Supervisor bad address.
+CSR_DEF(0x144, "sip"); //  Supervisor interrupt pending.
+// Supervisor Protection and Translation
+CSR_DEF(0x180, "sptbr"); //  Page-table base register.
+// Hypervisor Trap Setup
+CSR_DEF(0x200, "hstatus"); //  Hypervisor status register.
+CSR_DEF(0x202, "hedeleg"); //  Hypervisor exception delegation register.
+CSR_DEF(0x203, "hideleg"); //  Hypervisor interrupt delegation register.
+CSR_DEF(0x204, "hie"); //  Hypervisor interrupt-enable register.
+CSR_DEF(0x205, "htvec"); //  Hypervisor trap handler base address.
+// Hypervisor Trap Setup
+CSR_DEF(0x240, "hscratch"); //  Scratch register for hypervisor trap handlers.
+CSR_DEF(0x241, "hepc"); //  Hypervisor exception program counter.
+CSR_DEF(0x242, "hcause"); //  Hypervisor trap cause.
+CSR_DEF(0x243, "hbadaddr"); //  Hypervisor bad address.
+CSR_DEF(0x244, "hip"); //  Hypervisor interrupt pending.
+// Hypervisor Protection and Translation .. TBD.
+// Machine Information Registers
+CSR_DEF(0xF11, "mvendorid"); //  Vendor ID.
+CSR_DEF(0xF12, "marchid"); //  Architecture ID.
+CSR_DEF(0xF13, "mimpid"); //  Implementation ID.
+CSR_DEF(0xF14, "mhartid"); //  Hardware thread ID.
+// Machine Trap Setup
+CSR_DEF(0x300, "mstatus"); //  Machine status register.
+CSR_DEF(0x301, "misa"); //  ISA and extensions
+CSR_DEF(0x302, "medeleg"); //  Machine exception delegation register.
+CSR_DEF(0x303, "mideleg"); //  Machine interrupt delegation register.
+CSR_DEF(0x304, "mie"); //  Machine interrupt-enable register.
+CSR_DEF(0x305, "mtvec"); //  Machine trap-handler base address.
+// Machine Trap Handling
+CSR_DEF(0x340, "mscratch"); //  Scratch register for machine trap handlers.
+CSR_DEF(0x341, "mepc"); //  Machine exception program counter.
+CSR_DEF(0x342, "mcause"); //  Machine trap cause.
+CSR_DEF(0x343, "mbadaddr"); //  Machine bad address.
+CSR_DEF(0x344, "mip"); //  Machine interrupt pending.
+// Machine Protection and Translation
+CSR_DEF(0x380, "mbase"); //  Base register.
+CSR_DEF(0x381, "mbound"); //  Bound register.
+CSR_DEF(0x382, "mibase"); //  Instruction base register.
+CSR_DEF(0x383, "mibound"); //  Instruction bound register.
+CSR_DEF(0x384, "mdbase"); //  Data base register.
+CSR_DEF(0x385, "mdbound"); //  Data bound register
+// Machine Counter/Timers
+CSR_DEF(0xB00, "mcycle"); // Machine cycle counter.
+CSR_DEF(0xB02, "minstret"); // Machine instructions-retired counter.
+// 0xB03 MRW mhpmcounter3-31 Machine performance-monitoring counter.
+// Machine Counter Setup
+CSR_DEF(0x320, "mucounteren"); // User-mode counter enable.
+CSR_DEF(0x321, "mscounteren"); // Supervisor-mode counter enable.
+CSR_DEF(0x322, "mhcounteren"); // Hypervisor-mode counter enable.
+// 0x323, mhpmevent3-31 Machine performance-monitoring event selector.
+// Debug/Trace Registers (shared with Debug Mode)
+CSR_DEF(0x7A0, "tselect"); // Debug/Trace trigger register select.
+CSR_DEF(0x7A1, "tdata1"); // First Debug/Trace trigger data register.
+CSR_DEF(0x7A2, "tdata2"); // Second Debug/Trace trigger data register.
+CSR_DEF(0x7A3, "tdata3"); // Third Debug/Trace trigger data register.
+// Debug Mode Registers
+CSR_DEF(0x7B0, "dcsr"); // Debug control and status register.
+CSR_DEF(0x7B1, "dpc"); // Debug PC.
+CSR_DEF(0x7B2, "dscratch"); // Debug scratch register.
 }

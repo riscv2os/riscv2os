@@ -1,5 +1,13 @@
-#pragma once
-
+#include <stdint.h>
+#include <string.h>
 #include "decoder.h"
 
-bool rv_decode(uint8_t *code, int offset, int size);
+extern char *r_name[];
+extern char *csr_name[];
+
+#define R(i) r_name[i]
+
+#define CSR_DEF(id, name) csr_name[id]=name
+#define CSR(id) csr_name[id]
+
+void csr_init();
