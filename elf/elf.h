@@ -87,7 +87,8 @@ struct Elf32 {
     struct Elf32_Hdr  *hdr;
     struct Elf32_Shdr *shdrs;
     struct Elf32_Phdr *phdrs;
-    char *stab;
+    char *shstrtab;
+    char *strtab;
 };
 
 enum {

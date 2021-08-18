@@ -1,7 +1,7 @@
 CC = gcc
 TARGET = elfdump
 
-all: $(TARGET) run
+all: $(TARGET)
 
 elfdump: elf.c $(TARGET).c
 	$(CC) $^ -o $@
