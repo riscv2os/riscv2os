@@ -2,7 +2,6 @@
 
 // CSR 列表參考 https://people.eecs.berkeley.edu/~krste/papers/riscv-privileged-v1.9.1.pdf 2.2 CSR Listing
 // The RISC-V Instruction Set Manual, Volume II: Privileged Architecture, Privileged Architecture Version 1.9.1
-#define NCSR 0x1000
 
 char *r_name[] = {"x0", "ra", "sp", "gp", "tp", "t0", "t1", "t2", 
                   "s0", "s1", "a0", "a1", "a2", "a3", "a4", "a5", 

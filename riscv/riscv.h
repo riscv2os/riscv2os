@@ -10,4 +10,6 @@ extern char *csr_name[];
 #define CSR_DEF(id, name) csr_name[id]=name
 #define CSR(id) csr_name[id]
 
+#define NCSR 0x1000
+
 void csr_init();

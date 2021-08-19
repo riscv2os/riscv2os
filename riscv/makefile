@@ -1,6 +1,6 @@
 CC = gcc
 TARGET = ./dasm
-LIB = ../elf/elf.c riscv.c
+LIB = ../elf/elf.c riscv.c decoder.c
 
 all: $(TARGET)
 

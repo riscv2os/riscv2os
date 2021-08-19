@@ -154,3 +154,9 @@ static inline uint32_t sign_extend_b(uint32_t x)
 {
     return (int32_t)((int8_t) x);
 }
+
+// global variable
+uint32_t op, rd, rs1, rs2, funct3, funct7;
+uint32_t i_imm, b_imm, u_imm, j_imm, s_imm, csr_imm, csr;
+
+bool rv_decode(uint32_t inst);
