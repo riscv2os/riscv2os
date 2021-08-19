@@ -144,7 +144,7 @@ enum {
 
 struct Elf_Section {
     char *name;
-    uint8_t *body;
+    char *body;
     Elf32_Off offset;
     Elf32_Word size;
     Elf32_Addr addr;

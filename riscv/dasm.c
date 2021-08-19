@@ -33,7 +33,7 @@ static bool rv_dasm1(uint32_t inst, char *dasm, uint32_t pc)
         case 0b11011: sprintf(dasm, "jal %s,0x%x", R(rd), pc+j_imm); break;  // J-Type: jal ra,80008028 <lib_putc>
         case 0b11001: sprintf(dasm, "jalr %s,0x%x", R(rd), u_imm); break;  // I-Type:  JALR rd, rs1, imm
         case 0b01100: sprintf(dasm, "%s %s,%s,%s", i_op[funct3], R(rd), R(rs1), R(rs2)); break; // R-Type: add sp,sp,t0
-        case 0b00100: sprintf(dasm, "%si %s,%s,%d", i_op[funct3], R(rd), R(rs1), i_imm); break; // I-Type: addi sp,sp,32
+        case 0b00100: sprintf(dasm, "%-si %s,%s,%d", i_op[funct3], R(rd), R(rs1), i_imm); break; // I-Type: addi sp,sp,32
         case 0b11000: sprintf(dasm, "%s %s,%s,0x%x", b_op[funct3], R(rs2), R(rs1), pc+b_imm); break;  // B-Type: bne zero, a0,80000020
         case 0b00000: sprintf(dasm, "%s %s,%d(%s)", l_op[funct3], R(rd), i_imm, R(rs1)); break;  // I-type: lw a5,-20(s0)
         case 0b01000: sprintf(dasm, "%s %s,%d(%s)", s_op[funct3], R(rs2), s_imm, R(rs1)); break;  // S-Type: sw s0,8(sp)
@@ -64,20 +64,26 @@ static bool rv_dasm1(uint32_t inst, char *dasm, uint32_t pc)
           }
           break;
         default:
-            sprintf(dasm, "xxx");
+            sprintf(dasm, "?");
     }
     return true;
 }
 
-bool rv_dasm(uint8_t *code, int addr, int size) {
+bool rv_dasm(char *code, int addr, int size) {
     char line[256];
-    for (uint8_t *p = code; p<code+size; p += sizeof(uint32_t)) {
-        // uint32_t ir = p[0] | (p[1]<<8) | (p[2]<<16) | (p[3]<<24);
-        uint32_t ir = * (uint32_t*) p;
-        if (ir == 0) continue;
-        uint32_t pc = addr+p-code;
-        rv_dasm1(ir, line, pc);
-        printf("%09x: %08x %s\n", pc, ir, line);
+    uint32_t *endp = (uint32_t *) (code + size);
+    for (uint32_t *ir = (uint32_t *) code; ir<endp; ir++) {
+        if (*ir == 0) {
+          while (*ir == 0) {
+            ir++;
+          }
+          ir--;
+          printf("...\n");
+          continue;
+        }
+        uint32_t pc = addr+(char*)ir-code;
+        rv_dasm1(*ir, line, pc);
+        printf("%09x %09x %s\n", pc, *ir, line);
     }
 }
 
@@ -90,7 +96,7 @@ int main(int argc, char *argv[]) {
         return 1; 
     }
     elf_section_t s = elf_section(&elf, ".text");
-    printf("s.body=%p offset=0x%x size=%u\n", s.body, s.addr, s.size);
+    printf(".text: body=%p offset=0x%x size=%u\n", s.body, s.addr, s.size);
     csr_init();
     rv_dasm(s.body, s.addr, s.size);
 }
