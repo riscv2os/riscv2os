@@ -1,14 +1,17 @@
 CC = gcc
-TARGET = ./dasm
-LIB = ../elf/elf.c riscv.c decoder.c
+LIB = ../elf/elf.c riscv.c decoder.c csr.c
 
-all: $(TARGET)
+all: dasm vm
 
-$(TARGET): $(LIB) $(TARGET).c
+dasm: $(LIB) dasm.c
 	$(CC) $^ -o $@
 
-run: $(TARGET)
-	$(TARGET) ../obj/oshello.elf
+vm: $(LIB) vm.c
+	$(CC) $^ -o $@
+
+run:
+	dasm ../obj/oshello.elf
+#	vm ../obj/oshello.elf
 
 clean:
 	rm -f $(TARGET) *.exe

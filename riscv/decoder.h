@@ -4,6 +4,10 @@
 #include <stdbool.h>
 #include <stdio.h>
 
+// global variable
+uint32_t op, rd, rs1, rs2, funct3, funct7;
+uint32_t i_imm, b_imm, u_imm, j_imm, s_imm, csr_imm, csr;
+
 // clang-format off
 // instruction decode masks
 enum {
@@ -39,17 +43,6 @@ enum {
     //               ....xxxx....xxxx....xxxx....xxxx
 };
 
-/*
-    INST_6_2
-    // clang-format off
-    TABLE_TYPE jump_table[] = {
-    //  000         001           010        011           100         101        110   111
-        OP(load),   OP(load_fp),  OP(unimp), OP(misc_mem), OP(op_imm), OP(auipc), OP(unimp), OP(unimp), // 00
-        OP(store),  OP(store_fp), OP(unimp), OP(amo),      OP(op),     OP(lui),   OP(unimp), OP(unimp), // 01
-        OP(madd),   OP(msub),     OP(nmsub), OP(nmadd),    OP(fp),     OP(unimp), OP(unimp), OP(unimp), // 10
-        OP(branch), OP(jalr),     OP(unimp), OP(jal),      OP(system), OP(unimp), OP(unimp), OP(unimp), // 11
-    };
-*/
 // decode rd field
 static inline uint32_t dec_rd(uint32_t inst)
 {
@@ -155,8 +148,3 @@ static inline uint32_t sign_extend_b(uint32_t x)
     return (int32_t)((int8_t) x);
 }
 
-// global variable
-uint32_t op, rd, rs1, rs2, funct3, funct7;
-uint32_t i_imm, b_imm, u_imm, j_imm, s_imm, csr_imm, csr;
-
-bool rv_decode(uint32_t inst);

@@ -2,14 +2,14 @@
 #include <string.h>
 #include "decoder.h"
 
-extern char *r_name[];
-extern char *csr_name[];
-
-#define R(i) r_name[i]
-
-#define CSR_DEF(id, name) csr_name[id]=name
-#define CSR(id) csr_name[id]
-
+#define NREG 32
 #define NCSR 0x1000
 
-void csr_init();
+extern char *r_name[NCSR];
+extern char *csr_name[NCSR];
+
+bool csr_init();
+bool rv_decode(uint32_t inst);
+bool rv_dasm(uint32_t inst, char *dasm, uint32_t pc);
+
+
