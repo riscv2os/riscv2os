@@ -16,10 +16,5 @@ erun:
 drun:
 	dasm $(ELF)
 
-push:
-	git add -A
-	git commit -m "$(MSG)"
-	git push origin master
-
 clean:
 	rm -f $(TARGET) *.exe
