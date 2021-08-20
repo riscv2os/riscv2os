@@ -1,5 +1,5 @@
 CC = gcc
-LIB = elf/elf.c riscv/riscv.c riscv/cpu.c
+LIB = elf/elf.c riscv/riscv.c riscv/cpu.c riscv/memory.c
 ELF = ../data/oshello.elf
 
 all: elfdump dasm

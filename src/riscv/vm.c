@@ -96,7 +96,7 @@ static bool rv_store() {
         break;
     case 2: // SW
         if (addr & 3) error();
-        mem_wri_w(addr, data);
+        mem_write_w(addr, data);
         break;
     default: error();
     }
@@ -106,10 +106,12 @@ static bool rv_store() {
 static bool rv_system() {
     uint32_t tmp;
     switch (funct3) {
-    case 0: // 特殊指令
+    case 0: // 特殊指令，暫不處理
+        error();
+        /*
         switch (i_imm) {
         case 0: // ecall
-            syscall_handler();
+            // syscall_handler();
             break;
         case 1: // ebreak
             halt = true;
@@ -123,6 +125,7 @@ static bool rv_system() {
             pc = csr[mepc];
         default: error();
         }
+        */
         break;
     case 1: // CSRRW (Atomic Read/Write CSR)
         tmp = csrrw(x[rs1]);
