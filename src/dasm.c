@@ -1,5 +1,5 @@
-#include "../elf/elf.h"
-#include "../riscv/riscv.h"
+#include "elf/elf.h"
+#include "riscv/riscv.h"
 
 elf_t elf;
 

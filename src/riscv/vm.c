@@ -4,9 +4,7 @@
 
 bool trace = true;
 bool halt = false;
-uint32_t inst;
-uint32_t x[NREG];
-uint32_t csr[NCSR];
+
 
 static bool rv_op() {
     switch (funct3) {
