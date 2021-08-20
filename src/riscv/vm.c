@@ -207,4 +207,5 @@ int main(int argc, char *argv[]) {
     rv_init();
     rv_load_elf(&elf);
     rv_run(elf->hdr->e_entry);
+    mem_free();
 }

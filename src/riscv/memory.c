@@ -70,3 +70,10 @@ uint8_t mem_write_b(uint32_t addr, uint8_t data) {
     if (!c || addr >= c->end) error();
     *(uint8_t*) &c->mem[addr-c->begin] = data;
 }
+
+bool mem_free(elf_t *e) {
+    for (int i = 0; i < nchunk; i++) {
+        free(chunk[i].mem);
+    }
+    return true;
+}
