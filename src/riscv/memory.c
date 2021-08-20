@@ -1,22 +1,21 @@
 #include "memory.h"
 
-#define NCHUNK  128
-
 struct Chunk {
     char *mem;
     uint32_t begin, size, end;
 };
 
-static struct Chunk chunk[NCHUNK];
-static int    nchunk = 0;
+static struct Chunk *chunks;
+static int    nchunk;
 
 bool mem_load_elf(elf_t *e) {
     nchunk = e->hdr->e_phnum;
+    chunks = malloc(sizeof(struct Chunk)*nchunk);
     for (int i = 0; i < e->hdr->e_phnum; ++i) {
         struct Elf32_Phdr *phdr = &e->phdrs[i];
         if (phdr->p_type != PT_LOAD)
             continue;
-        struct Chunk *c = &chunk[nchunk++];
+        struct Chunk *c = &chunks[nchunk++];
         c->begin = phdr->p_vaddr;
         c->size = max(phdr->p_memsz, phdr->p_filesz);
         c->end = c->begin+c->size;
@@ -28,7 +27,7 @@ bool mem_load_elf(elf_t *e) {
 
 struct Chunk *mem_find_chunk(uint32_t addr) {
   for (int i=0; i<nchunk; i++) {
-      struct Chunk *c = &chunk[i];
+      struct Chunk *c = &chunks[i];
       if (addr >= c->begin && addr < c->end)
         return c;
   }
@@ -73,7 +72,8 @@ uint8_t mem_write_b(uint32_t addr, uint8_t data) {
 
 bool mem_free(elf_t *e) {
     for (int i = 0; i < nchunk; i++) {
-        free(chunk[i].mem);
+        free(chunks[i].mem);
     }
+    free(chunks);
     return true;
 }
