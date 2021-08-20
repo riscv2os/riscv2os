@@ -2,7 +2,11 @@
 
 #include <stdint.h>
 #include <stdbool.h>
-#include <string.h>
+#include <stdio.h>
+
+// global variable
+uint32_t op, rd, rs1, rs2, funct3, funct7;
+uint32_t i_imm, b_imm, u_imm, j_imm, s_imm, csr_imm, csr;
 
 // clang-format off
 // instruction decode masks
@@ -143,5 +147,4 @@ static inline uint32_t sign_extend_b(uint32_t x)
 {
     return (int32_t)((int8_t) x);
 }
-
 

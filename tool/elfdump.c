@@ -1,5 +1,5 @@
 #include <stdio.h>
-#include "elf.h"
+#include "../elf/elf.h"
 
 elf_t elf;
 
