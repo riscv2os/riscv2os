@@ -1,7 +1,7 @@
 #include "riscv.h"
 
 bool rv_init() {
-    cpu_init();
+    rv_init_csr();
 }
 
 bool rv_dasm_block(char *block, int addr, int size) {
@@ -17,8 +17,8 @@ bool rv_dasm_block(char *block, int addr, int size) {
           continue;
         }
         uint32_t pc = addr+(char*)ir-block;
-        cpu_decode(*ir);
-        cpu_dasm_inst(*ir, line, pc);
+        rv_decode(*ir);
+        rv_dasm_inst(*ir, line, pc);
         printf("%09x %09x %s\n", pc, *ir, line);
     }
 }

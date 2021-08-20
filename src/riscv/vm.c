@@ -5,6 +5,9 @@
 bool trace = true;
 bool halt = false;
 
+bool rv_load_elf(elf_t *e) {
+    return mem_load_elf(e);
+}
 
 static bool rv_op() {
     switch (funct3) {
@@ -201,6 +204,7 @@ int main(int argc, char *argv[]) {
     }
     elf_section_t s = elf_section(&elf, ".text");
     printf(".text: body=%p offset=0x%x size=%u\n", s.body, s.addr, s.size);
-    csr_init();
-    rv_run(s.body, s.addr, s.size);
+    rv_init();
+    rv_load_elf(&elf);
+    rv_run(elf->hdr->e_entry);
 }

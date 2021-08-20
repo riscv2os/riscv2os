@@ -11,7 +11,6 @@ static struct Chunk chunk[NCHUNK];
 static int    nchunk = 0;
 
 bool mem_load_elf(elf_t *e) {
-    // rv_set_pc(rv, e->hdr->e_entry); /* set the entry point */
     nchunk = e->hdr->e_phnum;
     for (int i = 0; i < e->hdr->e_phnum; ++i) {
         struct Elf32_Phdr *phdr = &e->phdrs[i];

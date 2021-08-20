@@ -1,7 +1,4 @@
-#include "cpu.h"
-
-#define NREG 32
-#define NCSR 0x1000
+#include "riscv.h"
 
 uint32_t x[NREG];
 uint32_t csr[NCSR];
@@ -28,7 +25,7 @@ const char *l_op[] = { "lb",  "lh",   "lw",     "?",     "lbu", "lhu",  "?",    
 const char *s_op[] = { "sb",  "sh",   "sw",     "?",     "?",   "?",    "?",    "?"};
 const char *csr_op[] = { "?", "csrrw", "csrrs", "csrrc", "?", "csrrwi", "csrrsi", "csrrci" };
 
-static bool cpu_init_csr() {
+bool rv_init_csr() {
     memset(csr_name, 0, sizeof(char*)*NCSR);
     // CSR 列表參考 https://people.eecs.berkeley.edu/~krste/papers/riscv-privileged-v1.9.1.pdf 2.2 CSR Listing
     // The RISC-V Instruction Set Manual, Volume II: Privileged Architecture, Privileged Architecture Version 1.9.1
@@ -127,11 +124,7 @@ static bool cpu_init_csr() {
     CSR_DEF(0x7B2, "dscratch"); // Debug scratch register.
 }
 
-bool cpu_init() {
-    cpu_init_csr();
-}
-
-bool cpu_decode(uint32_t inst) {
+bool rv_decode(uint32_t inst) {
     op = (inst & INST_6_2) >> 2;
     rd = dec_rd(inst);
     funct3 = dec_funct3(inst);
@@ -146,7 +139,7 @@ bool cpu_decode(uint32_t inst) {
     csr_id = dec_csr(inst);
 }
 
-bool cpu_dasm_inst(uint32_t inst, char *dasm, uint32_t pc) {
+bool rv_dasm_inst(uint32_t inst, char *dasm, uint32_t pc) {
     char *cmd;
     switch (op) {
         case 0b01101: sprintf(dasm, "lui %s,0x%x", R(rd), u_imm); break;  // U-Type: lui a5,0x10000

@@ -1,8 +1,6 @@
 #pragma once
 
-#include <stdint.h>
-#include <stdbool.h>
-#include <string.h>
+#include "../lib/lib.h"
 
 // clang-format off
 // instruction decode masks

@@ -4,6 +4,8 @@
 #include <stdbool.h>
 #include <string.h>
 #include <assert.h>
+#include <stdio.h>
+#include <stdlib.h>
 
 #define error() assert(0)
 
