@@ -1,5 +1,21 @@
 # riscv
 
+## vm
+
+```
+$ make vm
+gcc elf/elf.c riscv/riscv.c riscv/cpu.c riscv/memory.c vm.c -o vm
+$ make vrun
+vm ../data/oshello.elf
+.text: body=0000000000631080 offset=0x80000000 size=32996
+rv_init()...
+mem_load_elf()...
+mem_io_init() begin
+rv_run()...
+Hello OS!
+mem_free()...
+```
+
 ## dasm
 
 ```

@@ -6,7 +6,7 @@
 #define UART       0x10000000
 #define THR        0x00    // THR:transmitter holding register
 #define LSR        0x05    // LSR:line status register
-#define UART_SIZE  0x10
+#define UART_CHUNK_SIZE  0x10
 #define UART_LSR_EMPTY_MASK 0x40 
 
 bool mem_load_elf(elf_t *e);

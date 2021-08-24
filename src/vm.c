@@ -3,7 +3,10 @@
 #include "riscv/riscv.h"
 #include "riscv/memory.h"
 
-bool trace = true;
+#define setx(rd, val) x[rd]=(rd)?(val):x[(rd)]
+
+// bool trace = true;
+bool trace = false;
 bool halt = false;
 
 uint32_t pc;
@@ -67,15 +70,17 @@ static bool rv_op_imm() {
 static bool rv_branch() {
     bool jmp;
     switch (funct3) {
-        case 0: jmp = (x[rs1] == x[rs2]); break;
-        case 1: jmp = (x[rs1] != x[rs2]); break;
-        case 4: jmp = ((int32_t) x[rs1] < (int32_t) x[rs2]); break;
-        case 5: jmp = ((int32_t) x[rs1] >= (int32_t) x[rs2]); break;
-        case 6: jmp = (x[rs1] < x[rs2]); break;
-        case 7: jmp = (x[rs1] >= x[rs2]); break;
+        case 0: jmp = (x[rs1] == x[rs2]); break; // BEQ
+        case 1: jmp = (x[rs1] != x[rs2]); break; // BNE
+        case 4: jmp = ((int32_t) x[rs1] < (int32_t) x[rs2]); break; // BLT
+        case 5: jmp = ((int32_t) x[rs1] >= (int32_t) x[rs2]); break; // BGE
+        case 6: jmp = (x[rs1] < x[rs2]); break; // BLTU
+        case 7: jmp = (x[rs1] >= x[rs2]); break; // BGEU
         default: ERROR("rv_branch() funct3=%d not handled!", funct3);
     }
-    if (jmp) pc+=b_imm; else pc+=4;
+    if (jmp) {
+        pc+=b_imm;
+    } else pc+=4;
 }
 
 static bool rv_load() {
@@ -194,6 +199,7 @@ bool rv_step()
     uint32_t val, ra, addr, data, tmp, rel;
     bool jmp;
     
+    // x[0] = 0;
     switch (op) {
         case 0b01101: val=u_imm; x[rd]=val; pc+=4; break;  // U-Type: lui a5,0x10000
         case 0b00101: val=u_imm+pc; x[rd]=val; pc+=4; break;  // U-Type: auipc a0,0x0
@@ -208,7 +214,7 @@ bool rv_step()
         case 0b00011: pc += 4; break;     // FENCE  ex: fence (虛擬機中無作用)
         default: ERROR("rv_step() op=%d not handled!", op);
     }
-    // x[0] = 0;
+    x[0] = 0;
     if (trace) {
         printf("\tx[rd:%d]=%x\n", rd, x[rd]);
     }
@@ -221,7 +227,7 @@ bool rv_run(int entry) {
     while (!halt) { 
         rv_step();
         steps++;
-        if (steps == 10000) break;
+        if (steps == 1000) break;
     }
 }
 

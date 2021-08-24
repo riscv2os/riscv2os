@@ -9,6 +9,9 @@ static struct Chunk *chunks;
 static int    nchunk;
 #define IO_CHUNKS 1
 
+static struct Chunk *uart_chunk;
+static int uart_chunk_id;
+
 bool mem_set_chunk(int i, uint32_t begin, uint32_t size, char *mem) {
     struct Chunk *c = &chunks[i];
     c->begin = begin;
@@ -20,6 +23,15 @@ bool mem_set_chunk(int i, uint32_t begin, uint32_t size, char *mem) {
     } else {
         c->mem = NULL;
     }
+}
+
+bool mem_io_init() {
+    printf("mem_io_init() begin\n");
+    uart_chunk_id = nchunk-1;
+    char *uart_mem = malloc(UART_CHUNK_SIZE);
+    mem_set_chunk(uart_chunk_id, UART, UART_CHUNK_SIZE, uart_mem);
+    uart_chunk = &chunks[uart_chunk_id];
+    uart_chunk->mem[LSR] = 0xFF;
 }
 
 bool mem_load_elf(elf_t *e) {
@@ -38,8 +50,7 @@ bool mem_load_elf(elf_t *e) {
         mem_set_chunk(i, begin, size, mem);
         // printf("phdr: end\n");
     }
-    char *uart_mem = malloc(UART_SIZE);
-    mem_set_chunk(nchunk-1, UART, UART_SIZE, uart_mem);
+    mem_io_init();
     return true;
 }
 
@@ -89,9 +100,10 @@ uint8_t mem_write_b(uint32_t addr, uint8_t data) {
     if (!c || addr >= c->begin+c->size) ERROR("mem_write_b() addr out of range!");
     *(uint8_t*) &c->mem[addr-c->begin] = data;
     if (addr == UART+THR) {
-        printf("UART: put data(%c)", (char)data);
-        // putc((char)data);
-        c->mem[LSR] &=  ~UART_LSR_EMPTY_MASK;
+        // printf("UART: put data(%c)\n", (char)data);
+        putc((char)data, stdout);
+        // c->mem[LSR] |= UART_LSR_EMPTY_MASK;
+        c->mem[LSR] = 0xFF;
     }
 }
 
