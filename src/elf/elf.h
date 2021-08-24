@@ -1,12 +1,8 @@
+/* A minimal ELF parser */
+
 #pragma once
 
-/* A minimal ELF parser */
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <stdbool.h>
-#include <stddef.h>
-#include <stdint.h>
+#include "../lib/lib.h"
 
 typedef uint32_t Elf32_Addr;
 typedef uint32_t Elf32_Off;
@@ -77,11 +73,11 @@ struct Elf32_Shdr {
     Elf32_Word sh_entsize;
 };
 
-#define NRAW (100*1024*1024)
+// #define NRAW (100*1024*1024)
 
 struct Elf32 {
     FILE *file;
-    char rawdata[NRAW]; // 真正的資料
+    char *rawdata; // 真正的資料
     Elf32_Word rawsize;
     // 以下為 pointer
     struct Elf32_Hdr  *hdr;
@@ -154,6 +150,7 @@ typedef struct Elf_Section elf_section_t;
 typedef struct Elf32 elf_t;
 
 bool elf_load(elf_t *e, const char *path);
+bool elf_free(elf_t *e);
 void elf_print_header(elf_t *e);
 void elf_dump_body(elf_t *e);
 void elf_dump(elf_t *e);

@@ -18,7 +18,7 @@ static bool rv_op() {
     case 5: x[rd] = x[rs1] >> (x[rs2]&0x1f); break; // SRL
     case 6: x[rd] = x[rs1] | x[rs2]; break; // OR
     case 7: x[rd] = x[rs1] & x[rs2]; break; // AND
-    default: error();
+    default: ERROR();
     }
     pc+=4;
 }
@@ -38,7 +38,7 @@ static bool rv_op_imm() {
         x[rd] = x[rs1] >> (imm&0x1f); // SRLI
     case 6: x[rd] = x[rs1] | imm; break; // ORI
     case 7: x[rd] = x[rs1] & imm; break; // ANDI
-    default: error();
+    default: ERROR();
     }
     pc+=4;
 }
@@ -52,7 +52,7 @@ static bool rv_branch() {
     case 5: jmp = ((int32_t) x[rs1] >= (int32_t) x[rs2]); break;
     case 6: jmp = (x[rs1] < x[rs2]); break;
     case 7: jmp = (x[rs1] >= x[rs2]); break;
-    default: error();
+    default: ERROR();
     }
     if (jmp) pc+=b_imm; else pc+=4;
 }
@@ -65,21 +65,21 @@ static bool rv_load() {
         x[rd] = sign_extend_b(mem_read_b(addr));
         break;
     case 1: // LH
-        if (addr & 1) error();
+        if (addr & 1) ERROR();
         x[rd] = sign_extend_h(mem_read_s(addr));
         break;
     case 2: // LW
-        if (addr & 3) error();
+        if (addr & 3) ERROR();
         x[rd] = mem_read_w(addr);
         break;
     case 4: // LBU
         x[rd] = mem_read_b(addr);
         break;
     case 5: // LHU
-        if (addr & 1) error();
+        if (addr & 1) ERROR();
         x[rd] = mem_read_s(addr);
         break;
-    default: error();
+    default: ERROR();
     }
     pc+=4;
 }
@@ -93,14 +93,14 @@ static bool rv_store() {
         mem_write_b(addr, data);
         break;
     case 1: // SH
-        if (addr & 1) error();
+        if (addr & 1) ERROR();
         mem_write_s(addr, data);
         break;
     case 2: // SW
-        if (addr & 3) error();
+        if (addr & 3) ERROR();
         mem_wri_w(addr, data);
         break;
-    default: error();
+    default: ERROR();
     }
     pc+=4;
 }
@@ -120,10 +120,10 @@ static bool rv_system() {
         case 0x102: // sret
         case 0x202: // hret
         case 0x105: // wfi
-            error();
+            ERROR();
         case 0x302: // mret
             pc = csr[mepc];
-        default: error();
+        default: ERROR();
         }
         break;
     case 1: // CSRRW (Atomic Read/Write CSR)
@@ -150,7 +150,7 @@ static bool rv_system() {
         tmp = csrrc(rs1);
         x[rd] = rd ? tmp : x[rd];
         break;
-    default: error();
+    default: ERROR();
     }
 }
 
@@ -179,7 +179,7 @@ bool rv_step()
     case 0b01000: rv_store(); break;  // STORE  ex: sb
     case 0b11100: rv_system(); break; // SYSTEM ex: mret
     case 0b00011: pc += 4; break;     // FENCE  ex: fence (虛擬機中無作用)
-    default: error();
+    default: ERROR();
     }
     return true;
 }

@@ -138,12 +138,18 @@ void elf_dump(elf_t *e) {
 
 bool elf_load(elf_t *e, const char *path) {
     FILE *file = fopen(path, "rb");
-
     if (!file) return false;
 
     e->file = file;
-    
-    e->rawsize = fread(e->rawdata, 1, sizeof(e->rawdata), file);
+    fseek(file, 0, SEEK_END);
+    e->rawsize = ftell(file);
+    fseek(file, 0, SEEK_SET);
+
+    e->rawdata = malloc(e->rawsize);
+    if (fread(e->rawdata, 1, e->rawsize, file) != e->rawsize) {
+      ERROR("elf_load(): read file size error!");
+    }
+
     e->hdr = (struct Elf32_Hdr *)e->rawdata;
 
     if (!elf_valid(e)) return false;
@@ -157,4 +163,8 @@ bool elf_load(elf_t *e, const char *path) {
 
     e->strtab = elf_section(e, ".strtab").body;
     return true;
+}
+
+bool elf_free(elf_t *e) {
+    free(e->rawdata);
 }

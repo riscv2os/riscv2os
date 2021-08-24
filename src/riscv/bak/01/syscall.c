@@ -103,7 +103,7 @@ static void syscall_write(struct riscv_t *rv)
         /* return number of bytes written */
         rv_set_reg(rv, rv_reg_a0, written);
     } else {
-        /* error */
+        /* ERROR */
         rv_set_reg(rv, rv_reg_a0, -1);
     }
 
@@ -191,14 +191,14 @@ static void syscall_lseek(struct riscv_t *rv)
     c_map_iter_t it;
     c_map_find(s->fd_map, &it, &fd);
     if (c_map_at_end(s->fd_map, &it)) {
-        /* error */
+        /* ERROR */
         rv_set_reg(rv, rv_reg_a0, -1);
         return;
     }
 
     FILE *handle = c_map_iter_value(&it, FILE *);
     if (fseek(handle, offset, whence)) {
-        /* error */
+        /* ERROR */
         rv_set_reg(rv, rv_reg_a0, -1);
         return;
     }
@@ -220,7 +220,7 @@ static void syscall_read(struct riscv_t *rv)
     c_map_iter_t it;
     c_map_find(s->fd_map, &it, &fd);
     if (c_map_at_end(s->fd_map, &it)) {
-        /* error */
+        /* ERROR */
         rv_set_reg(rv, rv_reg_a0, -1);
         return;
     }

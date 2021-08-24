@@ -10,11 +10,17 @@ elfdump: $(LIB) elfdump.c
 dasm: $(LIB) dasm.c
 	$(CC) $^ -o $@
 
+vm: $(LIB) vm.c
+	$(CC) $^ -o $@
+
 erun:
 	elfdump $(ELF)
 
 drun:
 	dasm $(ELF)
+
+vrun:
+	vm $(ELF)
 
 clean:
 	rm -f $(TARGET) *.exe
