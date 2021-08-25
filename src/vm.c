@@ -240,14 +240,9 @@ int main(int argc, char *argv[]) {
         return 1; 
     }
     elf_section_t s = elf_section(&elf, ".text");
-    printf(".text: body=%p offset=0x%x size=%u\n", s.body, s.addr, s.size);
-    printf("rv_init()...\n");
     rv_init();
-    printf("mem_load_elf()...\n");
     mem_load_elf(&elf);
-    printf("rv_run()...\n");
     rv_run(elf.hdr->e_entry);
-    printf("mem_free()...\n");
     mem_free(&elf);
     elf_free(&elf);
 }

@@ -5,52 +5,40 @@ struct Chunk {
     uint32_t begin, size;
 };
 
-static struct Chunk *chunks;
-static int    nchunk;
 #define IO_CHUNKS 1
+static struct Chunk *chunks, *uart_chunk;
+static int nchunk;
 
-static struct Chunk *uart_chunk;
-static int uart_chunk_id;
-
-bool mem_set_chunk(int i, uint32_t begin, uint32_t size, char *mem) {
-    struct Chunk *c = &chunks[i];
+struct Chunk *mem_add_chunk(uint32_t begin, uint32_t size, char *mem) {
+    struct Chunk *c = &chunks[nchunk];
     c->begin = begin;
     c->size = size;
-    // printf("chunk:begin=0x%x, size=0x%x, end=0x%x\n", c->begin, c->size, c->end);
-    if (c->size > 0) {
-        c->mem = malloc(c->size);
-        memcpy(c->mem, mem, c->size);
-    } else {
-        c->mem = NULL;
-    }
+    if (c->size == 0) return NULL;
+    nchunk++;
+    c->mem = malloc(c->size);
+    if (mem != NULL) memcpy(c->mem, mem, c->size);
+    return c;
 }
 
-bool mem_io_init() {
-    printf("mem_io_init() begin\n");
-    uart_chunk_id = nchunk-1;
-    char *uart_mem = malloc(UART_CHUNK_SIZE);
-    mem_set_chunk(uart_chunk_id, UART, UART_CHUNK_SIZE, uart_mem);
-    uart_chunk = &chunks[uart_chunk_id];
-    uart_chunk->mem[LSR] = 0xFF;
+bool io_init() {
+    uart_chunk = mem_add_chunk(UART, UART_CHUNK_SIZE, NULL);
+    uart_chunk->mem[LSR] = 0xFF; // 一開始 UART 設定為可輸出
 }
 
 bool mem_load_elf(elf_t *e) {
-    // printf("mem_load_elf() begin\n");
-    nchunk = e->hdr->e_phnum+IO_CHUNKS;
-    chunks = malloc(sizeof(struct Chunk)*nchunk);
-    // printf("e_phnum=%d\n", e->hdr->e_phnum);
+    int chunk_max = e->hdr->e_phnum+IO_CHUNKS;
+    chunks = malloc(sizeof(struct Chunk)*chunk_max);
+    nchunk = 0;
     for (int i = 0; i < e->hdr->e_phnum; ++i) {
         struct Elf32_Phdr *phdr = &e->phdrs[i];
-        // printf("phdr[%d]\n", i);
         if (phdr->p_type != PT_LOAD)
             continue;
         uint32_t begin = phdr->p_vaddr;
         uint32_t size = max(phdr->p_memsz, phdr->p_filesz);
         char *mem = e->rawdata + phdr->p_offset;
-        mem_set_chunk(i, begin, size, mem);
-        // printf("phdr: end\n");
+        mem_add_chunk(begin, size, mem);
     }
-    mem_io_init();
+    io_init();
     return true;
 }
 
@@ -95,16 +83,18 @@ uint16_t mem_write_s(uint32_t addr, uint16_t data) {
     *(uint16_t*) &c->mem[addr-c->begin] = data;
 }
 
+uint8_t io_write_b(struct Chunk *c, uint32_t addr, uint8_t data) {
+    if (addr == UART+THR) { // 當寫入到 UART 時
+        putc((char)data, stdout); // 就模擬在宿主機輸出該字元的行為。
+        c->mem[LSR] |= UART_LSR_EMPTY_MASK; // UART 已經空了，可以再輸出了。
+    }
+}
+
 uint8_t mem_write_b(uint32_t addr, uint8_t data) {
     struct Chunk *c = mem_find_chunk(addr);
     if (!c || addr >= c->begin+c->size) ERROR("mem_write_b() addr out of range!");
     *(uint8_t*) &c->mem[addr-c->begin] = data;
-    if (addr == UART+THR) {
-        // printf("UART: put data(%c)\n", (char)data);
-        putc((char)data, stdout);
-        // c->mem[LSR] |= UART_LSR_EMPTY_MASK;
-        c->mem[LSR] = 0xFF;
-    }
+    io_write_b(c, addr, data);
 }
 
 bool mem_free(elf_t *e) {
