@@ -1,5 +1,13 @@
 # riscv
 
+最近總是偷學 github 上的程式碼！
+
+我把 jserv 的 rvemu32-next 讀懂之後，改寫成三個應用
+
+1. elfdump -- 印出 elf 檔案的內容，類似 objdump
+2. dasm -- RISC-V 32bits 的反組譯器，會讀入 ELF 然後反組譯出程式段。
+3. vm -- RISC-V 32bits 的虛擬機，會讀入 ELF 然後像 QEMU 那樣執行該程式。
+
 ## vm
 
 ```
