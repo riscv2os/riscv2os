@@ -75,3 +75,70 @@ s.body=0000000000412988 offset=0x80000000 size=32996
 0800080dc: f99ff0ef jal ra,0x80008074
 0800080e0: 0000006f jal x0,0x800080e0
 ```
+
+## elfdump
+
+```
+$ make elfdump
+gcc elf/elf.c riscv/riscv.c riscv/cpu.c riscv/memory.c elfdump.c -o elfdump
+$ make erun
+elfdump ../data/oshello.elf
+ELF:
+  type:2        (1=ELF32, 2=ELF64)
+  machine:243   (40=ARM, 50=IA_64, 243=RISCV)
+  version:1
+  flags:0
+  entry:0x80000000
+
+Section Headers:(type: 1=PROGBITS, 2=SYMTAB, 3=STRTAB)
+  [Nr] Name                 Type            Address          Off    Size   ES Flg Lk Inf Al
+                            0               0000000000000000 000000 000000 00   0  0   0  0
+       .text                1               0000000080000000 001000 0080e4 00   6  0   0  4
+       .rodata              1               00000000800080e4 0090e4 00000b 00   2  0   0  4
+       .data                1               00000000800080ef 0090ef 000f11 00   3  0   0  1
+       .riscv.attributes    70000003        0000000000000000 00a000 000026 00   0  0   0  1
+       .comment             1               0000000000000000 00a026 000028 01  30  0   0  1
+       .symtab              2               0000000000000000 00a050 0000f0 10   0  7  11  4
+       .strtab              3               0000000000000000 00a140 00006a 00   0  0   0  1
+       .shstrtab            3               0000000000000000 00a1aa 00004a 00   0  0   0  1
+
+Program Headers: (type: 1=LOAD, 2=DYNAMIC, ... SHLIB=5 ...)
+  Type           Offset   VirtAddr           PhysAddr           FileSiz  MemSiz   Flg Align
+  1              0x001000 0x0000000080000000 0x0000000080000000 0x0080ef 0x0080ef   5 0x1000
+  1              0x0090ef 0x00000000800080ef 0x00000000800080ef 0x000f11 0x000f11   6 0x1000
+  1              0x00a000 0x0000000000000000 0x0000000000000000 0x000000 0x000000   0 0x1000
+
+
+.text
+fffffff3 22 40 fffffff1 ffffff93 ffffff92 ffffffa2 00 17 21 00 00 13 01 01 02 33 01 51 00 73 25 40 fffffff1 63 14 05 00 6f ffffff80 ffffff80 0a 73 00 50 10 6f fffffff0 ffffffdf ffffffff 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+00 00 00 00 00 00 00 00 ...
+.rodata
+48 65 6c 6c 6f 20 4f 53 21 0a 00
+.data
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 ...
+.riscv.attributes
+A%   riscv v32i2p0_m2p0_a2p0
+.comment
+47 43 43 3a 20 28 53 69 46 69 76 65 20 47 43 43 20 38 2e 33 2e 30 2d 32 30 32 30 2e 30 34 2e 31 29 20 38 2e 33 2e 30 00
+.symtab
+  name:           section:           value:0x0          size:0     info:(local,none)
+  name:           section:.text      value:0x80000000   size:0     info:(local,section)
+  name:           section:.rodata    value:0x800080e4   size:0     info:(local,section)
+  name:           section:.data      value:0x800080ef   size:0     info:(local,section)
+  name:           section:.riscv.attributes value:0x0          size:0     info:(local,section)
+  name:           section:.comment   value:0x0          size:0     info:(local,section)
+  name:C:\Users\user\AppData\Local\Temp\ccNpw8Ob.o section:?          value:0x0          size:0     info:(local,file)
+  name:STACK_SIZE section:?          value:0x2000       size:0     info:(local,none)
+  name:stacks     section:.text      value:0x80000028   size:0     info:(local,none)
+  name:park       section:.text      value:0x80000020   size:0     info:(local,none)
+  name:os.c       section:?          value:0x0          size:0     info:(local,file)
+  name:lib_putc   section:.text      value:0x80008028   size:76    info:(global,func)
+  name:lib_puts   section:.text      value:0x80008074   size:80    info:(global,func)
+  name:os_main    section:.text      value:0x800080c4   size:32    info:(global,func)
+  name:_start     section:.text      value:0x80000000   size:0     info:(global,none)
+
+.strtab
+ C:\Users\user\AppData\Local\Temp\ccNpw8Ob.o STACK_SIZE stacks park os.c lib_putc lib_puts os_main _start 
+.shstrtab
+ .symtab .strtab .shstrtab .text .rodata .data .riscv.attributes .comment 
+```
