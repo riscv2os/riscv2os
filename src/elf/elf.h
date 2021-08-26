@@ -119,6 +119,8 @@ enum {
     STT_TLS = 6,
 };
 
+#define ELF_ST_TYPE(x) (((unsigned int) x) & 0xf)
+
 enum {
   SHT_NULL = 0,
   SHT_PROGBITS = 1,

@@ -18,12 +18,13 @@ uint32_t inst;
 uint32_t op, rd, rs1, rs2, funct3, funct7;
 uint32_t i_imm, b_imm, u_imm, j_imm, s_imm, csr_imm, csr_id;
 
-const char *i_op[] = { "add", "sll",  "slt",    "sltu",  "xor", "srl",  "or",   "and"  }; 
-const char *m_op[] = { "mul", "mulh", "mulhsh", "mulhu", "div", "divu", "rem",  "remu" };
-const char *b_op[] = { "beq", "bne",  "?",      "?",     "blt", "bge",  "bltu", "bgeu" };
-const char *l_op[] = { "lb",  "lh",   "lw",     "?",     "lbu", "lhu",  "?",    "?"  }; 
-const char *s_op[] = { "sb",  "sh",   "sw",     "?",     "?",   "?",    "?",    "?"};
-const char *csr_op[] = { "?", "csrrw", "csrrs", "csrrc", "?", "csrrwi", "csrrsi", "csrrci" };
+const char *i_op1[] = { "add", "sll",  "slt",    "sltu",  "xor", "srl",  "or",   "and"  };
+const char *i_op2[] = { "sub", "?",    "?",      "?",     "?",   "sra",  "?",    "?"  };
+const char *m_op[]  = { "mul", "mulh", "mulhsh", "mulhu", "div", "divu", "rem",  "remu" };
+const char *b_op[]  = { "beq", "bne",  "?",      "?",     "blt", "bge",  "bltu", "bgeu" };
+const char *l_op[]  = { "lb",  "lh",   "lw",     "?",     "lbu", "lhu",  "?",    "?"  }; 
+const char *s_op[]  = { "sb",  "sh",   "sw",     "?",     "?",   "?",    "?",    "?"};
+const char *csr_op[] = { "?", "csrrw", "csrrs", "csrrc", "?", "csrrwi", "csrrsi","csrrci" };
 
 bool rv_init_csr() {
     memset(csr_name, 0, sizeof(char*)*NCSR);
@@ -146,8 +147,14 @@ bool rv_dasm_inst(uint32_t inst, char *dasm, uint32_t pc) {
         case 0b00101: sprintf(dasm, "auipc %s,0x%x", R(rd), u_imm); break;  // U-Type: auipc a0,0x0
         case 0b11011: sprintf(dasm, "jal %s,0x%x", R(rd), pc+j_imm); break;  // J-Type: jal ra,80008028 <lib_putc>
         case 0b11001: sprintf(dasm, "jalr %s,0x%x", R(rd), u_imm); break;  // I-Type:  JALR rd, rs1, imm
-        case 0b01100: sprintf(dasm, "%s %s,%s,%s", i_op[funct3], R(rd), R(rs1), R(rs2)); break; // R-Type: add sp,sp,t0
-        case 0b00100: sprintf(dasm, "%-si %s,%s,%d", i_op[funct3], R(rd), R(rs1), i_imm); break; // I-Type: addi sp,sp,32
+        case 0b01100:
+            switch (funct7) {
+              case 0b0000000: sprintf(dasm, "%s %s,%s,%s", i_op1[funct3], R(rd), R(rs1), R(rs2)); break; // R-Type: add sp,sp,t0        
+              case 0b0100000: sprintf(dasm, "%s %s,%s,%s", i_op2[funct3], R(rd), R(rs1), R(rs2)); break; // R-Type: sub sp,sp,t0
+              default: sprintf(dasm, "?"); break;       
+            }
+            break;
+        case 0b00100: sprintf(dasm, "%-si %s,%s,%d", i_op1[funct3], R(rd), R(rs1), i_imm); break; // I-Type: addi sp,sp,32
         case 0b11000: sprintf(dasm, "%s %s,%s,0x%x", b_op[funct3], R(rs2), R(rs1), pc+b_imm); break;  // B-Type: bne zero, a0,80000020
         case 0b00000: sprintf(dasm, "%s %s,%d(%s)", l_op[funct3], R(rd), i_imm, R(rs1)); break;  // I-type: lw a5,-20(s0)
         case 0b01000: sprintf(dasm, "%s %s,%d(%s)", s_op[funct3], R(rs2), s_imm, R(rs1)); break;  // S-Type: sw s0,8(sp)
@@ -177,8 +184,7 @@ bool rv_dasm_inst(uint32_t inst, char *dasm, uint32_t pc) {
             sprintf(dasm, "fence.i");
           }
           break;
-        default:
-            sprintf(dasm, "?");
+        default: sprintf(dasm, "?");
     }
     return true;
 }

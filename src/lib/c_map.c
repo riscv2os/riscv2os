@@ -5,6 +5,8 @@
 
 #include "c_map.h"
 
+#define UNUSED __attribute__((unused)) // ccc 從 common.h 中移入此處。(我們只用 gcc 編譯，先不考慮其他編譯器)
+
 struct c_map_internal {
     struct c_map_node *head;
 

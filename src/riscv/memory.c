@@ -49,7 +49,7 @@ struct Chunk *mem_find_chunk(uint32_t addr) {
       if (addr >= c->begin && addr < end)
         return c;
   }
-  ERROR("chunk not found!");
+  ERROR("chunk not found, addr=0x%x!", addr);
   return NULL;
 }
 
@@ -85,7 +85,8 @@ uint16_t mem_write_s(uint32_t addr, uint16_t data) {
 
 uint8_t io_write_b(struct Chunk *c, uint32_t addr, uint8_t data) {
     if (addr == UART+THR) { // 當寫入到 UART 時
-        putc((char)data, stdout); // 就模擬在宿主機輸出該字元的行為。
+        printf("UART: output %c\n", data); // 就模擬在宿主機輸出該字元的行為。
+        // putc((char)data, stdout); // 就模擬在宿主機輸出該字元的行為。
         c->mem[LSR] |= UART_LSR_EMPTY_MASK; // UART 已經空了，可以再輸出了。
     }
 }

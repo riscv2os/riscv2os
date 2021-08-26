@@ -1,10 +1,12 @@
 #include <stdio.h>
 #include "elf/elf.h"
+#include "elf/sym.h"
 #include "riscv/riscv.h"
 #include "riscv/memory.h"
 
 #define setx(rd, val) x[rd]=(rd)?(val):x[(rd)]
 
+c_map_t symbols;
 // bool trace = true;
 bool trace = false;
 bool halt = false;
@@ -33,7 +35,9 @@ static uint32_t csrrc(uint32_t csri, uint32_t val) {
 }
 
 static bool rv_op() {
-    switch (funct3) {
+    switch (funct7) {
+    case 0b0000000:
+        switch (funct3) {
         case 0: x[rd] = (int32_t)x[rs1] + (int32_t)x[rs2]; break; // ADD
         case 1: x[rd] = x[rs1] << (x[rs2]&0x1f); break; // SLL
         case 2: x[rd] = ((int32_t)x[rs1] < (int32_t)x[rs2]) ? 1 : 0; break; // SLT
@@ -42,7 +46,17 @@ static bool rv_op() {
         case 5: x[rd] = x[rs1] >> (x[rs2]&0x1f); break; // SRL
         case 6: x[rd] = x[rs1] | x[rs2]; break; // OR
         case 7: x[rd] = x[rs1] & x[rs2]; break; // AND
-        default: ERROR("rv_op() funct3=%d not handled!", funct3);
+        default: ERROR("rv_op() funct7=%02x funct3=%x not handled!", funct7, funct3);
+        }
+        break;
+    case 0b0100000:
+        switch (funct3) {
+        case 0b000: x[rd] = (int32_t)x[rs1] - (int32_t)x[rs2]; break; // SUB
+        case 0b101: x[rd] = (int32_t)x[rs1] >> (x[rs2] & 0x1f); break; // SRA
+        default: ERROR("rv_op() funct7=%02x funct3=%x not handled!", funct7, funct3);
+        }
+        break;
+    default: ERROR("rv_op() funct7=%02x not handled!", funct7);
     }
     pc+=4;
 }
@@ -91,11 +105,11 @@ static bool rv_load() {
             x[rd] = sign_extend_b(mem_read_b(addr));
             break;
         case 1: // LH
-            if (addr & 1) ERROR("rv_load() LH addr should be even number!");
+            // if (addr & 1) ERROR("rv_load() LH addr should be even number!");
             x[rd] = sign_extend_h(mem_read_s(addr));
             break;
         case 2: // LW
-            if (addr & 3) ERROR("rv_load() LW addr should be times of 4!");
+            // if (addr & 3) ERROR("rv_load() LW addr should be times of 4!");
             x[rd] = mem_read_w(addr);
             break;
         case 4: // LBU
@@ -120,11 +134,11 @@ static bool rv_store() {
             mem_write_b(addr, data);
             break;
         case 1: // SH
-            if (addr & 1) ERROR("rv_store() SH addr=0x%x should be even number!", addr);
+            // if (addr & 1) ERROR("rv_store() SH addr=0x%x should be even number!", addr);
             mem_write_s(addr, data);
             break;
         case 2: // SW
-            if (addr & 3) ERROR("rv_store() SW addr=0x%x should be times of 4!", addr);
+            // if (addr & 3) ERROR("rv_store() SW addr=0x%x should be times of 4!", addr);
             mem_write_w(addr, data);
             break;
         default: ERROR("rv_store() funct3=%d not handled!", funct3);
@@ -193,7 +207,7 @@ bool rv_step()
 
     if (trace) {
         rv_dasm_inst(inst, line, pc);
-        printf("%09x %09x %s", pc, inst, line);
+        printf("  %09x %09x %s", pc, inst, line);
     }
 
     uint32_t val, ra, addr, data, tmp, rel;
@@ -224,10 +238,18 @@ bool rv_step()
 bool rv_run(int entry) {
     int steps = 0;
     pc = entry;
-    while (!halt) { 
+    while (!halt) {
+        uint32_t pc0 = pc;
+        
+        /* trace execution */
+        const char *sym = sym_find(symbols, pc);
+        if (sym)
+            printf("%s (%09x)\n", (sym ? sym : ""), pc);
+
         rv_step();
         steps++;
-        if (steps == 1000) break;
+        if (pc0 == pc) break; // forever loop
+        // if (steps == 10000) break;
     }
 }
 
@@ -235,6 +257,9 @@ elf_t elf;
 
 int main(int argc, char *argv[]) {
     char *fname=argv[1];
+    for (int i=2; i<argc; i++) {
+        if (strcmp(argv[i], "-t")==0) trace = true;
+    }
     if (!elf_load(&elf, fname)) {
         fprintf(stderr, "ELF file '%s' load fail \n", fname);
         return 1; 
@@ -242,7 +267,10 @@ int main(int argc, char *argv[]) {
     elf_section_t s = elf_section(&elf, ".text");
     rv_init();
     mem_load_elf(&elf);
+    elf_dump(&elf);
+    symbols = sym_load_elf(&elf);
     rv_run(elf.hdr->e_entry);
+    sym_free(symbols);
     mem_free(&elf);
     elf_free(&elf);
 }
