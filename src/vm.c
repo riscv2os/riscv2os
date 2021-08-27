@@ -1,12 +1,12 @@
 #include <stdio.h>
-#include "elf/elf.h"
-#include "elf/sym.h"
+#include "lib/elf.h"
+#include "riscv/sym.h"
 #include "riscv/riscv.h"
 #include "riscv/memory.h"
 
 #define setx(rd, val) x[rd]=(rd)?(val):x[(rd)]
 
-c_map_t symbols;
+c_map_t *symbols;
 // bool trace = true;
 bool trace = false;
 bool halt = false;
@@ -330,7 +330,7 @@ int main(int argc, char *argv[]) {
     elf_section_t s = elf_section(&elf, ".text");
     rv_init();
     mem_load_elf(&elf);
-    elf_dump(&elf);
+    // elf_dump(&elf);
     symbols = sym_load_elf(&elf);
     rv_run(elf.hdr->e_entry);
     sym_free(symbols);

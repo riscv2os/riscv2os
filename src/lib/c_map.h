@@ -55,27 +55,27 @@ typedef struct {
  * Keep track of all aspects of the tree. All c_map functions require a pointer
  * to this struct.
  */
-typedef struct c_map_internal *c_map_t;
+typedef struct c_map c_map_t;
 
 /* Constructor */
-c_map_t c_map_new(size_t, size_t, int (*)(void *, void *));
+c_map_t* c_map_new(size_t, size_t, int (*)(void *, void *));
 
 /* Add function */
-bool c_map_insert(c_map_t, void *, void *);
+bool c_map_insert(c_map_t *, void *, void *);
 
 /* Get functions */
-void c_map_find(c_map_t, c_map_iter_t *, void *);
-bool c_map_empty(c_map_t);
+void c_map_find(c_map_t *, c_map_iter_t *, void *);
+bool c_map_empty(c_map_t *);
 
 /* Iteration */
-bool c_map_at_end(c_map_t, c_map_iter_t *);
+bool c_map_at_end(c_map_t *, c_map_iter_t *);
 
 /* Remove functions */
-void c_map_erase(c_map_t, c_map_iter_t *);
-void c_map_clear(c_map_t);
+void c_map_erase(c_map_t *, c_map_iter_t *);
+void c_map_clear(c_map_t *);
 
 /* Destructor */
-void c_map_delete(c_map_t);
+void c_map_delete(c_map_t *);
 
 #define c_map_init(key_type, element_type, __func) \
     c_map_new(sizeof(key_type), sizeof(element_type), __func)

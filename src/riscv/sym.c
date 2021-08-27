@@ -1,8 +1,7 @@
-#include "../elf/elf.h"
-#include "../lib/c_map.h"
+#include "sym.h"
 
-c_map_t sym_load_elf(elf_t *e) {
-    c_map_t symbols = c_map_init(int, char *, c_map_cmp_uint);
+c_map_t *sym_load_elf(elf_t *e) {
+    c_map_t *symbols = c_map_init(int, char *, c_map_cmp_uint);
     c_map_clear(symbols);
     c_map_insert(symbols, &(int){0}, &(char *){NULL});
 
@@ -21,12 +20,12 @@ c_map_t sym_load_elf(elf_t *e) {
     return symbols;
 }
 
-const char *sym_find(c_map_t symbols, uint32_t addr) {
+const char *sym_find(c_map_t *symbols, uint32_t addr) {
     c_map_iter_t it;
     c_map_find(symbols, &it, &addr);
     return c_map_at_end(symbols, &it) ? NULL : c_map_iter_value(&it, char *);
 }
 
-bool sym_free(c_map_t symbols) {
+bool sym_free(c_map_t *symbols) {
     c_map_delete(symbols);
 }

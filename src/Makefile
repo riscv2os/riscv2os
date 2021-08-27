@@ -1,5 +1,5 @@
 CC = gcc
-LIB = elf/elf.c riscv/riscv.c riscv/cpu.c riscv/memory.c lib/c_map.c elf/sym.c
+LIB = lib/elf.c lib/c_map.c riscv/riscv.c riscv/cpu.c riscv/memory.c riscv/sym.c
 # ELF = ../data/os_hello.elf // success
 # ELF = ../data/os_context_switch.elf // success
 # ELF = ../data/os_multitasking.elf

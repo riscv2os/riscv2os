@@ -1,7 +1,7 @@
 #pragma once
 
 #include "../lib/lib.h"
-#include "../elf/elf.h"
+#include "../lib/elf.h"
 
 #define UART       0x10000000
 #define THR        0x00    // THR:transmitter holding register

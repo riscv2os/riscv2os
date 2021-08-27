@@ -18,6 +18,49 @@ vm ../data/oshello.elf
 Hello OS!
 ```
 
+case 2:
+
+```
+$ make vm
+gcc elf/elf.c riscv/riscv.c riscv/cpu.c riscv/memory.c lib/c_map.c elf/sym.c vm.c -o vm
+$ make vrun
+vm ../data/os_multitasking_myvm.elf
+OS start
+OS: Activate next task
+Task0: Created!
+Task0: Now, return to kernel mode
+OS: Back to OS
+
+OS: Activate next task
+Task1: Created!
+Task1: Now, return to kernel mode
+OS: Back to OS
+
+OS: Activate next task
+Task0: Running...
+OS: Back to OS
+
+OS: Activate next task
+Task1: Running...
+OS: Back to OS
+
+OS: Activate next task
+Task0: Running...
+OS: Back to OS
+
+OS: Activate next task
+Task1: Running...
+OS: Back to OS
+
+OS: Activate next task
+Task0: Running...
+OS: Back to OS
+
+OS: Activate next task
+Task1: Running...
+make: *** [Makefile:28: vrun] Interrupt
+```
+
 ## dasm
 
 ```

@@ -7,7 +7,7 @@
 
 #define UNUSED __attribute__((unused)) // ccc 從 common.h 中移入此處。(我們只用 gcc 編譯，先不考慮其他編譯器)
 
-struct c_map_internal {
+struct c_map {
     struct c_map_node *head;
 
     /* Properties */
@@ -55,7 +55,7 @@ static c_map_node_t *c_map_create_node(void *key,
     return node;
 }
 
-static void c_map_delete_node(c_map_t obj UNUSED, c_map_node_t *node)
+static void c_map_delete_node(c_map_t * obj UNUSED, c_map_node_t *node)
 {
     free(node->key);
     free(node->data);
@@ -74,7 +74,7 @@ static void c_map_delete_node(c_map_t obj UNUSED, c_map_node_t *node)
  *
  * Returns the new node pointing in the spot of the original node.
  */
-static c_map_node_t *c_map_rotate_left(c_map_t obj, c_map_node_t *node)
+static c_map_node_t *c_map_rotate_left(c_map_t * obj, c_map_node_t *node)
 {
     c_map_node_t *r = node->right, *rl = r->left, *up = node->up;
 
@@ -113,7 +113,7 @@ static c_map_node_t *c_map_rotate_left(c_map_t obj, c_map_node_t *node)
  *
  * Return the new node pointing in the spot of the original node.
  */
-static c_map_node_t *c_map_rotate_right(c_map_t obj, c_map_node_t *node)
+static c_map_node_t *c_map_rotate_right(c_map_t * obj, c_map_node_t *node)
 {
     c_map_node_t *l = node->left, *lr = l->right, *up = node->up;
 
@@ -140,7 +140,7 @@ static c_map_node_t *c_map_rotate_right(c_map_t obj, c_map_node_t *node)
     return l;
 }
 
-static void c_map_l_l(c_map_t obj,
+static void c_map_l_l(c_map_t * obj,
                       c_map_node_t *node UNUSED,
                       c_map_node_t *parent UNUSED,
                       c_map_node_t *grandparent,
@@ -156,7 +156,7 @@ static void c_map_l_l(c_map_t obj,
     grandparent->right->color = c1;
 }
 
-static void c_map_l_r(c_map_t obj,
+static void c_map_l_r(c_map_t * obj,
                       c_map_node_t *node,
                       c_map_node_t *parent,
                       c_map_node_t *grandparent,
@@ -175,7 +175,7 @@ static void c_map_l_r(c_map_t obj,
     c_map_l_l(obj, node, parent, grandparent, uncle);
 }
 
-static void c_map_r_r(c_map_t obj,
+static void c_map_r_r(c_map_t * obj,
                       c_map_node_t *node UNUSED,
                       c_map_node_t *parent UNUSED,
                       c_map_node_t *grandparent,
@@ -191,7 +191,7 @@ static void c_map_r_r(c_map_t obj,
     grandparent->left->color = c1;
 }
 
-static void c_map_r_l(c_map_t obj,
+static void c_map_r_l(c_map_t * obj,
                       c_map_node_t *node,
                       c_map_node_t *parent,
                       c_map_node_t *grandparent,
@@ -210,7 +210,7 @@ static void c_map_r_l(c_map_t obj,
     c_map_r_r(obj, node, parent, grandparent, uncle);
 }
 
-static void c_map_fix_colors(c_map_t obj, c_map_node_t *node)
+static void c_map_fix_colors(c_map_t * obj, c_map_node_t *node)
 {
     /* If root, set the color to black */
     if (node == obj->head) {
@@ -266,7 +266,7 @@ static void c_map_fix_colors(c_map_t obj, c_map_node_t *node)
  * guaranteed constant time. As such, there is a maximum of O(lg n) operations
  * taking place during the fixup procedure.
  */
-static void c_map_delete_fixup(c_map_t obj,
+static void c_map_delete_fixup(c_map_t * obj,
                                c_map_node_t *node,
                                c_map_node_t *p,
                                bool y_is_left,
@@ -365,7 +365,7 @@ static void c_map_delete_fixup(c_map_t obj,
  * Recursive wrapper for deleting nodes in a graph at an accelerated pace.
  * Skips rotations. Just aggressively goes through all nodes and deletes.
  */
-static void c_map_clear_nested(c_map_t obj, c_map_node_t *node)
+static void c_map_clear_nested(c_map_t * obj, c_map_node_t *node)
 {
     /* Free children */
     if (node->left)
@@ -382,7 +382,7 @@ static void c_map_clear_nested(c_map_t obj, c_map_node_t *node)
  * tree. This is so iterators know where the beginning and end of the tree
  * resides.
  */
-static void c_map_calibrate(c_map_t obj)
+static void c_map_calibrate(c_map_t * obj)
 {
     if (!obj->head) {
         obj->it_least.node = obj->it_most.node = NULL;
@@ -409,9 +409,9 @@ static void c_map_calibrate(c_map_t obj)
  * required to be passed in. A destruct function is optional and must be
  * added in through another function.
  */
-c_map_t c_map_new(size_t s1, size_t s2, int (*cmp)(void *, void *))
+c_map_t * c_map_new(size_t s1, size_t s2, int (*cmp)(void *, void *))
 {
-    c_map_t obj = malloc(sizeof(struct c_map_internal));
+    c_map_t * obj = malloc(sizeof(struct c_map));
 
     // Set all pointers to NULL
     obj->head = NULL;
@@ -436,7 +436,7 @@ c_map_t c_map_new(size_t s1, size_t s2, int (*cmp)(void *, void *))
  * Insert a key/value pair into the c_map. The value can be blank. If so,
  * it is filled with 0's, as defined in "c_map_create_node".
  */
-bool c_map_insert(c_map_t obj, void *key, void *value)
+bool c_map_insert(c_map_t * obj, void *key, void *value)
 {
     /* Copy the key and value into new node and prepare it to put into tree. */
     c_map_node_t *new_node =
@@ -487,7 +487,7 @@ bool c_map_insert(c_map_t obj, void *key, void *value)
     return true;
 }
 
-static void c_map_prev(c_map_t obj, c_map_iter_t *it)
+static void c_map_prev(c_map_t * obj, c_map_iter_t *it)
 {
     if (!it->node) {
         it->prev = NULL;
@@ -519,7 +519,7 @@ static void c_map_prev(c_map_t obj, c_map_iter_t *it)
     }
 }
 
-void c_map_find(c_map_t obj, c_map_iter_t *it, void *key)
+void c_map_find(c_map_t * obj, c_map_iter_t *it, void *key)
 {
     if (!obj->head) { /* End the search instantly if nothing is found. */
         it->node = it->prev = NULL;
@@ -561,13 +561,13 @@ void c_map_find(c_map_t obj, c_map_iter_t *it, void *key)
         it->node = NULL;
 }
 
-bool c_map_empty(c_map_t obj)
+bool c_map_empty(c_map_t * obj)
 {
     return (obj->size == 0);
 }
 
 /* Return true if at the the rend of the c_map */
-bool c_map_at_end(c_map_t obj UNUSED, c_map_iter_t *it)
+bool c_map_at_end(c_map_t * obj UNUSED, c_map_iter_t *it)
 {
     return (it->node == NULL);
 }
@@ -576,7 +576,7 @@ bool c_map_at_end(c_map_t obj UNUSED, c_map_iter_t *it)
  * Remove a node from the c_map. It performs a BST delete, and then reorders
  * the tree so that it remains balanced.
  */
-void c_map_erase(c_map_t obj, c_map_iter_t *it)
+void c_map_erase(c_map_t * obj, c_map_iter_t *it)
 {
     c_map_node_t *x, *y;
     c_map_node_t *node = it->node, *target, *double_blk, *x_parent;
@@ -695,7 +695,7 @@ void c_map_erase(c_map_t obj, c_map_iter_t *it)
  * Delete all nodes in the graph. This is done by calling erase on the head
  * node until the tree is empty.
  */
-void c_map_clear(c_map_t obj)
+void c_map_clear(c_map_t * obj)
 {
     if (obj->head) /* Aggressively delete by recursion */
         c_map_clear_nested(obj, obj->head);
@@ -705,7 +705,7 @@ void c_map_clear(c_map_t obj)
 }
 
 /* Free the c_map from memory and delete all nodes. */
-void c_map_delete(c_map_t obj)
+void c_map_delete(c_map_t * obj)
 {
     /* Free all nodes */
     c_map_clear(obj);
