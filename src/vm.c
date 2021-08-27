@@ -36,7 +36,7 @@ static uint32_t csrrc(uint32_t csri, uint32_t val) {
 
 static bool rv_op() {
     switch (funct7) {
-    case 0b0000000:
+    case 0b0000000: // op1
         switch (funct3) {
         case 0: x[rd] = (int32_t)x[rs1] + (int32_t)x[rs2]; break; // ADD
         case 1: x[rd] = x[rs1] << (x[rs2]&0x1f); break; // SLL
@@ -49,14 +49,79 @@ static bool rv_op() {
         default: ERROR("rv_op() funct7=%02x funct3=%x not handled!", funct7, funct3);
         }
         break;
-    case 0b0100000:
+
+    case 0b0000001:  // rv32m, ex: mul sp,sp,t0
+        switch (funct3) {
+        case 0: // MUL
+            x[rd] = (int32_t)x[rs1] * (int32_t)x[rs2];
+            break;
+        case 1: { // MULH
+            const int64_t a = (int32_t) x[rs1];
+            const int64_t b = (int32_t) x[rs2];
+            x[rd] = ((uint64_t)(a * b)) >> 32;
+            }
+            break;
+        case 2: { // MULHSU
+            const int64_t a = (int32_t) x[rs1];
+            const uint64_t b = x[rs2];
+            x[rd] = ((uint64_t)(a * b)) >> 32;
+        }   break;        
+        case 3: // MULHU
+            x[rd] = ((uint64_t) x[rs1] * (uint64_t) x[rs2]) >> 32;
+            break;
+        case 4: { // DIV
+            const int32_t dividend = (int32_t) x[rs1];
+            const int32_t divisor = (int32_t) x[rs2];
+            if (divisor == 0) {
+                x[rd] = ~0u;
+            } else if (divisor == -1 && x[rs1] == 0x80000000u) {
+                x[rd] = x[rs1];
+            } else {
+                x[rd] = dividend / divisor;
+            }
+        }   break;
+        case 5: { // DIVU
+            const uint32_t dividend = x[rs1];
+            const uint32_t divisor = x[rs2];
+            if (divisor == 0) {
+                x[rd] = ~0u;
+            } else {
+                x[rd] = dividend / divisor;
+            }
+        }   break;     
+        case 6: {  // REM
+            const int32_t dividend = x[rs1];
+            const int32_t divisor = x[rs2];
+            if (divisor == 0) {
+                x[rd] = dividend;
+            } else if (divisor == -1 && x[rs1] == 0x80000000u) {
+                x[rd] = 0;
+            } else {
+                x[rd] = dividend % divisor;
+            }
+        }   break;
+        case 7:  {  // REMU
+            const uint32_t dividend = x[rs1];
+            const uint32_t divisor = x[rs2];
+            if (divisor == 0) {
+                x[rd] = dividend;
+            } else {
+                x[rd] = dividend % divisor;
+            }
+        }   break;
+        default: ERROR("rv_op() funct7=%02x funct3=%x not handled!", funct7, funct3);
+        }
+        break;
+
+    case 0b0100000: // op2
         switch (funct3) {
         case 0b000: x[rd] = (int32_t)x[rs1] - (int32_t)x[rs2]; break; // SUB
         case 0b101: x[rd] = (int32_t)x[rs1] >> (x[rs2] & 0x1f); break; // SRA
         default: ERROR("rv_op() funct7=%02x funct3=%x not handled!", funct7, funct3);
         }
         break;
-    default: ERROR("rv_op() funct7=%02x not handled!", funct7);
+    default:
+        ERROR("rv_op() funct7=%02x not handled!", funct7);
     }
     pc+=4;
 }
@@ -240,12 +305,10 @@ bool rv_run(int entry) {
     pc = entry;
     while (!halt) {
         uint32_t pc0 = pc;
-        
-        /* trace execution */
-        const char *sym = sym_find(symbols, pc);
-        if (sym)
-            printf("%s (%09x)\n", (sym ? sym : ""), pc);
-
+        if (trace) {
+            const char *sym = sym_find(symbols, pc);
+            if (sym) printf("%s (%09x)\n", (sym ? sym : ""), pc);
+        }
         rv_step();
         steps++;
         if (pc0 == pc) break; // forever loop

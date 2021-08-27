@@ -9,19 +9,19 @@ struct Chunk {
 static struct Chunk *chunks, *uart_chunk;
 static int nchunk;
 
-struct Chunk *mem_add_chunk(uint32_t begin, uint32_t size, char *mem) {
+struct Chunk *mem_add_chunk(uint32_t begin, uint32_t size, char *mem, uint32_t copy_size) {
     struct Chunk *c = &chunks[nchunk];
     c->begin = begin;
     c->size = size;
     if (c->size == 0) return NULL;
     nchunk++;
-    c->mem = malloc(c->size);
-    if (mem != NULL) memcpy(c->mem, mem, c->size);
+    c->mem = calloc(1, c->size); // 不能用 malloc(c->size); 要清零
+    if (mem != NULL) memcpy(c->mem, mem, copy_size);
     return c;
 }
 
 bool io_init() {
-    uart_chunk = mem_add_chunk(UART, UART_CHUNK_SIZE, NULL);
+    uart_chunk = mem_add_chunk(UART, UART_CHUNK_SIZE, NULL, 0);
     uart_chunk->mem[LSR] = 0xFF; // 一開始 UART 設定為可輸出
 }
 
@@ -36,7 +36,7 @@ bool mem_load_elf(elf_t *e) {
         uint32_t begin = phdr->p_vaddr;
         uint32_t size = max(phdr->p_memsz, phdr->p_filesz);
         char *mem = e->rawdata + phdr->p_offset;
-        mem_add_chunk(begin, size, mem);
+        mem_add_chunk(begin, size, mem, phdr->p_filesz);
     }
     io_init();
     return true;
@@ -85,8 +85,8 @@ uint16_t mem_write_s(uint32_t addr, uint16_t data) {
 
 uint8_t io_write_b(struct Chunk *c, uint32_t addr, uint8_t data) {
     if (addr == UART+THR) { // 當寫入到 UART 時
-        printf("UART: output %c\n", data); // 就模擬在宿主機輸出該字元的行為。
-        // putc((char)data, stdout); // 就模擬在宿主機輸出該字元的行為。
+        // printf("UART: output %c\n", data); // 就模擬在宿主機輸出該字元的行為。
+        putc((char)data, stdout); // 就模擬在宿主機輸出該字元的行為。
         c->mem[LSR] |= UART_LSR_EMPTY_MASK; // UART 已經空了，可以再輸出了。
     }
 }

@@ -151,6 +151,7 @@ bool rv_dasm_inst(uint32_t inst, char *dasm, uint32_t pc) {
             switch (funct7) {
               case 0b0000000: sprintf(dasm, "%s %s,%s,%s", i_op1[funct3], R(rd), R(rs1), R(rs2)); break; // R-Type: add sp,sp,t0        
               case 0b0100000: sprintf(dasm, "%s %s,%s,%s", i_op2[funct3], R(rd), R(rs1), R(rs2)); break; // R-Type: sub sp,sp,t0
+              case 0b0000001: sprintf(dasm, "%s %s,%s,%s", m_op[funct3], R(rd), R(rs1), R(rs2)); break; // rv32m : mul sp,sp,t0
               default: sprintf(dasm, "?"); break;       
             }
             break;
