@@ -128,7 +128,15 @@ sys_kernel:
         call timer_handler # call timer_handler in timer.c
         reg_load sp        # restore all registers
         addi sp, sp, 128   # restore stack pointer
-        jr a7              # jump to a7=mepc , return to timer break point
+
+        # restore mepc from scratch
+        csrrw a0, mscratch, a0 #  exchange(mscratch,a0)
+        sw      a1, 0(a0)
+        lw      a1, 20(a0)
+        csrw    mepc, ra
+        lw      a1, 0(a0)
+        csrrw a0, mscratch, a0 #  exchange(mscratch,a0)
+        ret
 
 .globl sys_timer
 .align 4
@@ -137,11 +145,18 @@ sys_timer:
         # scratch[0,4,8] : register save area.
         # scratch[12] : address of CLINT's MTIMECMP register.
         # scratch[16] : desired interval between interrupts.
+        # scratch[20] : saved mepc
 
+        # save registers to scratch area
         csrrw a0, mscratch, a0 #  exchange(mscratch,a0)
         sw a1, 0(a0)
         sw a2, 4(a0)
         sw a3, 8(a0)
+        csrr a1, mepc
+        sw a1, 20(a0)     # save mepc to scratch area 
+
+        la a1, sys_kernel # mepc = sys_kernel (la : load address)
+        csrw mepc, a1     # mret : will jump to sys_kernel
 
         # schedule the next timer interrupt
         # by adding interval to mtimecmp.
@@ -150,11 +165,8 @@ sys_timer:
         lw a3, 0(a1)   # a3 = CLINT_MTIMECMP(hart)
         add a3, a3, a2 # a3 += interval
         sw a3, 0(a1)   # CLINT_MTIMECMP(hart) = a3
-
-        csrr a7, mepc     # a7 = mepc, for sys_kernel jump back to interrupted point
-        la a1, sys_kernel # mepc = sys_kernel (la : load address)
-        csrw mepc, a1     # mret : will jump to sys_kernel
  
+        # restore registers from scratch area
         lw a3, 8(a0)
         lw a2, 4(a0)
         lw a1, 0(a0)

@@ -3,7 +3,7 @@
 extern void os_kernel();
 
 // a scratch area per CPU for machine-mode timer interrupts.
-reg_t timer_scratch[NCPU][5];
+reg_t timer_scratch[NCPU][6];
 
 void timer_init()
 {
