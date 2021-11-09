@@ -1,4 +1,4 @@
-#include "elf/elf.h"
+#include "lib/elf.h"
 #include "riscv/riscv.h"
 
 elf_t elf;
