@@ -1,0 +1,18 @@
+*~
+_*
+*.o
+*.d
+*.asm
+*.sym
+*.img
+*.exe
+vectors.S
+bootblock
+entryother
+initcode
+initcode.out
+kernelmemfs
+# mkfs
+kernel/kernel
+user/usys.S
+.gdbinit
