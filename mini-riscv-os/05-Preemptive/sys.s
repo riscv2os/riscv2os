@@ -147,7 +147,7 @@ sys_timer:
         # scratch[16] : desired interval between interrupts.
         # scratch[20] : saved mepc
 
-        # save registers to scratch area
+        # save register to scratch area
         csrrw a0, mscratch, a0 #  exchange(mscratch,a0)
         sw a1, 0(a0)
         sw a2, 4(a0)

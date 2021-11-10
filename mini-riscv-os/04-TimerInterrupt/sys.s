@@ -4,12 +4,5 @@
 .globl sys_timer
 .align 4
 sys_timer:
-	# call the C timer_handler(reg_t epc, reg_t cause)
-	csrr	a0, mepc
-	csrr	a1, mcause
-	call	timer_handler
-
-	# timer_handler will return the return address via a0.
-	csrw	mepc, a0
-
-	mret # back to interrupt location (pc=mepc)
+	call	timer_handler	# call the C timer_handler()
+	mret 					# back to interrupt location (pc=mepc)

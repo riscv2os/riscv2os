@@ -22,9 +22,8 @@ void timer_init()
 
 static int timer_count = 0;
 
-reg_t timer_handler(reg_t epc, reg_t cause)
+void timer_handler()
 {
-  reg_t return_pc = epc;
   // disable machine-mode timer interrupts.
   w_mie(~((~r_mie()) | (1 << 7)));
   lib_printf("timer_handler: %d\n", ++timer_count);
@@ -32,5 +31,4 @@ reg_t timer_handler(reg_t epc, reg_t cause)
   *(reg_t *)CLINT_MTIMECMP(id) = *(reg_t *)CLINT_MTIME + interval;
   // enable machine-mode timer interrupts.
   w_mie(r_mie() | MIE_MTIE);
-  return return_pc;
 }
