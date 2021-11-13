@@ -11,9 +11,9 @@ SECTIONS
 
   .text : {
     *(.text .text.*)
-    . = ALIGN(0x1000);
+    . = ALIGN(0x1000); /* 啟動位址為 0x1000 */
     _trampoline = .;
-    *(trampsec)
+    *(trampsec) /* 定義在 trempline.s 中的 .section trampsec */
     . = ALIGN(0x1000);
     ASSERT(. - _trampoline == 0x1000, "error: trampoline larger than one page");
     PROVIDE(etext = .);

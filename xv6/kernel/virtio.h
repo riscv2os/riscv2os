@@ -46,9 +46,9 @@
 // this many virtio descriptors.
 // must be a power of two.
 #define NUM 8
-
+// Virtio 是生產者/消費者模式，採用 virtqueue 作為資料結構
 // a single descriptor, from the spec.
-struct virtq_desc {
+struct virtq_desc { // queue 中的一個節點，會形成鏈結串列
   uint64 addr;
   uint32 len;
   uint16 flags;
@@ -58,7 +58,7 @@ struct virtq_desc {
 #define VRING_DESC_F_WRITE 2 // device writes (vs read)
 
 // the (entire) avail ring, from the spec.
-struct virtq_avail {
+struct virtq_avail { // 可用的描述子，未分配出去的，以陣列形成環狀方式運用
   uint16 flags; // always zero
   uint16 idx;   // driver will write ring[idx] next
   uint16 ring[NUM]; // descriptor numbers of chain heads
@@ -72,7 +72,7 @@ struct virtq_used_elem {
   uint32 len;
 };
 
-struct virtq_used {
+struct virtq_used { // 已經在使用的描述子
   uint16 flags; // always zero
   uint16 idx;   // device increments when it adds a ring[] entry
   struct virtq_used_elem ring[NUM];
@@ -89,6 +89,6 @@ struct virtq_used {
 // the block, and a one-byte status.
 struct virtio_blk_req {
   uint32 type; // VIRTIO_BLK_T_IN or ..._OUT
-  uint32 reserved;
-  uint64 sector;
+  uint32 reserved; // reserved 代表未來可能會用，目前沒用到？
+  uint64 sector; // 讀寫的磁區號碼
 };

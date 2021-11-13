@@ -1,6 +1,6 @@
 struct buf { // 緩衝區塊
-  int valid;    // has data been read from disk? 已讀入？
-  int disk;     // does disk "own" buf?
+  int valid;    // has data been read from disk? // 已讀入？
+  int disk;     // does disk "own" buf? // 正在讀？
   uint dev;     // 裝置代號
   uint blockno; // 區塊代號
   struct sleeplock lock; // 鎖定中？
