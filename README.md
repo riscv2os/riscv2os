@@ -20,3 +20,7 @@ riscv2os 是一本手把手帶你學習 RISC-V 到可以自製 RISC-V 處理器�
 ## 授權
 
 本專案採 [MIT-License](LICENSE) 授權釋出！
+
+## 參考
+
+* [微自幹的作業系統輕旅行](https://ithelp.ithome.com.tw/users/20110850/ironman/3859)

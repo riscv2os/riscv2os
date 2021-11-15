@@ -4,7 +4,7 @@
 #include "riscv.h"
 #include "defs.h"
 
-// (中斷控制器)
+// (外部中斷控制器)
 // the riscv Platform Level Interrupt Controller (PLIC).
 //
 

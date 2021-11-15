@@ -86,7 +86,7 @@ usertrap(void) // 使用者中斷 (自陷 trap)
 }
 
 //
-// return to user space
+// return to user space // 切換回使用者空間
 //
 void
 usertrapret(void)
@@ -126,14 +126,14 @@ usertrapret(void)
   // jump to trampoline.S at the top of memory, which 
   // switches to the user page table, restores user registers,
   // and switches to user mode with sret.
-  uint64 fn = TRAMPOLINE + (userret - trampoline); // 呼叫 trampoline.S 切換回使用者行程。
+  uint64 fn = TRAMPOLINE + (userret - trampoline); // 呼叫 trampoline.S 的 userret 以切換回使用者行程。
   ((void (*)(uint64,uint64))fn)(TRAPFRAME, satp);
 }
 
 // interrupts and exceptions from kernel code go here via kernelvec,
 // on whatever the current kernel stack is.
 void 
-kerneltrap()
+kerneltrap() // 核心中斷
 {
   int which_dev = 0;
   uint64 sepc = r_sepc();

@@ -3,7 +3,7 @@ ENTRY( _entry )
 
 SECTIONS
 {
-  /*
+  /* 入口點 _entry 定義為 0x80000000
    * ensure that entry.S / _entry is at 0x80000000,
    * where qemu's -kernel jumps.
    */

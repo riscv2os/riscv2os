@@ -1,13 +1,13 @@
-struct buf;
-struct context;
-struct file;
-struct inode;
-struct pipe;
-struct proc;
-struct spinlock;
-struct sleeplock;
-struct stat;
-struct superblock;
+struct buf;           // 磁碟快取緩衝
+struct context;       // 行程切換的內文
+struct file;          // 檔案
+struct inode;         // 檔案系統的 inode 結構
+struct pipe;          // 管道
+struct proc;          // 行程
+struct spinlock;      // 旋轉鎖
+struct sleeplock;     // 睡眠鎖
+struct stat;          // 檔案狀態
+struct superblock;    // 超級區塊
 
 // bio.c (緩衝輸出入)
 void            binit(void);

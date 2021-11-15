@@ -32,12 +32,12 @@ sys_fork(void) // 複製行程 fork()
 }
 
 uint64
-sys_wait(void) // 等待行程結束 wait(status)
+sys_wait(void) // 等待行程結束 wait(&status)
 {
   uint64 p;
-  if(argaddr(0, &p) < 0)
+  if(argaddr(0, &p) < 0) // 如果參數為 0 就直接傳回？
     return -1;
-  return wait(p);
+  return wait(p); // 否則就呼叫 wait(&status)
 }
 
 uint64
