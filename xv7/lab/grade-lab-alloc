@@ -1,0 +1,29 @@
+#!/usr/bin/env python
+
+import re
+from gradelib import *
+
+r = Runner(save("xv6.out"))
+
+@test(0, "running alloctest")
+def test_alloctest():
+    r.run_qemu(shell_script([
+        'alloctest'
+    ]))
+
+@test(30, "filetest", parent=test_alloctest)
+def test_filetest():
+    r.match("^filetest: OK$")
+
+@test(50, "memtest", parent=test_alloctest)
+def test_memtest():
+    r.match("^memtest: OK$")
+
+@test(20, "usertests")
+def test_usertests():
+    r.run_qemu(shell_script([
+        'usertests'
+    ]), timeout=150)
+    r.match('^ALL TESTS PASSED$')
+
+run_tests()

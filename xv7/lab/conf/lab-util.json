@@ -1,0 +1,8 @@
+{
+  "name": "util",
+  "commit": "b7233a81c235ca4737da1034da8e97003d9d0d9c",
+  "replace": [
+    "gradelib.py",
+    "grade-lab-util"
+  ]
+}

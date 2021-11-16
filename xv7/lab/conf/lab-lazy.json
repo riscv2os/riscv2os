@@ -1,0 +1,10 @@
+{
+  "name": "lazy",
+  "commit": "8706c7ad5ad1099bf06c33012f5ef826a2c7aae6",
+  "replace": [
+    "grade-lab-lazy",
+    "gradelib.py",
+    "user/usertests.c",
+    "user/lazytests.c"
+  ]
+}

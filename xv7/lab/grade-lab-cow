@@ -1,0 +1,45 @@
+#!/usr/bin/env python
+
+import re
+from gradelib import *
+
+r = Runner(save("xv6.out"))
+
+@test(0, "running cowtest")
+def test_cowtest():
+    r.run_qemu(shell_script([
+        'cowtest'
+    ]))
+
+@test(30, "simple", parent=test_cowtest)
+def test_simple():
+    matches = re.findall("^simple: ok$", r.qemu.output, re.M)
+    assert_equal(len(matches), 2, "Number of appearances of 'simple: ok'")
+
+@test(30, "three", parent=test_cowtest)
+def test_three():
+    matches = re.findall("^three: ok$", r.qemu.output, re.M)
+    assert_equal(len(matches), 3, "Number of appearances of 'three: ok'")
+
+@test(20, "file", parent=test_cowtest)
+def test_file():
+    r.match('^file: ok$')
+
+@test(19, "usertests")
+def test_usertests():
+    r.run_qemu(shell_script([
+        'usertests'
+    ]), timeout=150)
+    r.match('^ALL TESTS PASSED$')
+
+@test(1, "time")
+def test_time():
+    try:
+        with open('time.txt') as f:
+            d = f.read().strip()
+            if not re.match(r'^\d+$', d):
+                raise AssertionError('time.txt does not contain a single integer (number of hours spent on the lab)')
+    except IOError:
+        raise AssertionError('Cannot read time.txt')
+
+run_tests()

@@ -1,0 +1,57 @@
+#!/usr/bin/env python
+
+import re
+from gradelib import *
+
+r = Runner(save("xv6.out"))
+
+@test(0, "running nsh tests")
+def test_nsh_top():
+    try:
+        with open('user/nsh.c') as f:
+            contents = f.read()
+            if 'malloc' in contents or 'sbrk' in contents:
+                raise AssertionError('Use of malloc() / sbrk() is forbidden')
+    except IOError:
+        raise AssertionError('Cannot read user/nsh.c')
+    r.run_qemu(shell_script([
+        'testsh nsh'
+    ]))
+
+@test(11, "simple echo", parent=test_nsh_top)
+def test_simple_echo():
+    r.match('^simple echo:.*PASS$')
+
+@test(11, "simple grep", parent=test_nsh_top)
+def test_simple_grep():
+    r.match('^simple grep:.*PASS$')
+
+@test(11, "two commands", parent=test_nsh_top)
+def test_two_commands():
+    r.match('^two commands:.*PASS$')
+
+@test(11, "output redirection", parent=test_nsh_top)
+def test_output_redirection():
+    r.match('^output redirection:.*PASS$')
+
+@test(11, "input redirection", parent=test_nsh_top)
+def test_input_redirection():
+    r.match('^input redirection:.*PASS$')
+
+@test(11, "both redirections", parent=test_nsh_top)
+def test_both_redirections():
+    r.match('^both redirections:.*PASS$')
+
+@test(11, "simple pipe", parent=test_nsh_top)
+def test_simple_pipe():
+    r.match('^simple pipe:.*PASS$')
+
+@test(11, "pipe and redirects", parent=test_nsh_top)
+def test_pipe_and_redirects():
+    r.match('^pipe and redirects:.*PASS$')
+
+@test(12, "lots of commands", parent=test_nsh_top)
+def test_lots_of_commands():
+    r.match('^lots of commands:.*PASS$')
+
+run_tests()

@@ -1,0 +1,8 @@
+{
+  "name": "alloc",
+  "commit": "02247fb22b72e8d3851f7834336c319380002117",
+  "keep": [
+    "kernel/buddy.c",
+    "kernel/file.c"
+  ]
+}

@@ -1,0 +1,134 @@
+#!/usr/bin/env python3
+
+import argparse
+import json
+import os
+import re
+import shutil
+import subprocess
+import sys
+import tempfile
+import time
+
+
+REPO_PATH = '/xv6'
+DEVNULL = open(os.devnull, 'w')
+
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--config', type=str, required=True, help='configuration for grading this lab')
+    parser.add_argument('--repo', type=str, default=REPO_PATH, help='path to xv6 repository')
+    parser.add_argument('--single', action='store_true', default=False, help='grade a single submission')
+    parser.add_argument('--output', type=str, help='output filename')
+    parser.add_argument('path', help='path to submission(s)')
+    args = parser.parse_args()
+    with open(args.config) as config_file:
+        config = json.load(config_file)
+    grade(config, args.repo, args.path, args.single, args.output)
+
+
+def grade(config, repo, path, single, output):
+    if single:
+        submissions = [path]
+    else:
+        submissions = [os.path.join(path, f) for f in os.listdir(path) if not f.startswith('.')]
+    results = []
+    start = time.time()
+    for i, sub in enumerate(submissions):
+        print('{}/{}, {} elapsed, {} remaining'.format(
+            i+1,
+            len(submissions),
+            hms(time.time() - start),
+            '?' if i == 0 else hms((time.time() - start)*(len(submissions)-i)/i)
+        ), file=sys.stderr)
+        score, possible, stdout = grade_one(config, repo, sub)
+        message = '' if score == possible else stdout
+        basename = os.path.basename(sub)
+        if basename.endswith('.tar.gz'):
+            email = basename[:-len('.tar.gz')]
+        else:
+            email = basename
+        results.append({'email': email, 'grade': score, 'comment': message})
+        print('  {}: {} points'.format(email, score), file=sys.stderr)
+    results.sort(key=lambda r: r['grade'])
+    if output:
+        with open(output, 'w') as fout:
+            json.dump(results, fout, indent=2, sort_keys=True)
+    else:
+        print(json.dumps(results, indent=2, sort_keys=True))
+
+
+def grade_one(config, repo, submission):
+    git_dir = os.path.join(repo, '.git')
+    # prepare directory
+    grading_dir = tempfile.mkdtemp()
+    temps = [grading_dir]
+    if 'keep' in config:
+        # whitelist
+        # check out appropriate commit from original source
+        subprocess.check_call('git --git-dir={} archive {} | (cd {}; tar x)'.format(
+            git_dir,
+            config['commit'],
+            grading_dir
+        ), shell=True)
+        # untar student submission
+        submission_dir = tempfile.mkdtemp()
+        temps.append(submission_dir)
+        subprocess.check_call(['tar', 'xf', submission, '-C', submission_dir], stderr=DEVNULL)
+        # copy over student files
+        for name in config['keep']:
+            student_file = os.path.join(submission_dir, name)
+            if os.path.exists(student_file):
+                shutil.copyfile(student_file, os.path.join(grading_dir, name))
+    else:
+        # blacklist
+        assert 'replace' in config
+        # untar student submission
+        subprocess.check_call(['tar', 'xf', submission, '-C', grading_dir], stderr=DEVNULL)
+        # check out specific files from original source
+        for name in config['replace']:
+            with open(os.path.join(grading_dir, name), 'wb') as fout:
+                subprocess.check_call([
+                    'git',
+                    '--git-dir={}'.format(git_dir),
+                    'show',
+                    '{}:{}'.format(config['commit'], name)
+                ], stdout=fout)
+    # grade submission
+    process = subprocess.Popen(
+        ['python', './grade-lab-{}'.format(config['name'])],
+        cwd=grading_dir,
+        stdout=subprocess.PIPE,
+        stderr=DEVNULL
+    )
+    output = process.communicate()[0].decode('utf8')
+    match = re.match(r'Score: (\d+)/(\d+)', output.strip().split('\n')[-1])
+    if match:
+        score = int(match.group(1))
+        possible = int(match.group(2))
+    else:
+        score = 0
+        possible = None
+    # cleanup
+    for t in temps:
+        shutil.rmtree(t)
+
+    return score, possible, output
+
+
+def hms(seconds):
+    seconds = int(seconds)
+    hours = (seconds // (60 * 60))
+    minutes = (seconds // 60) % 60
+    seconds = seconds % 60
+    if hours > 0:
+        return '%d hr %d min' % (hours, minutes)
+    elif minutes > 0:
+        return '%d min %d sec' % (minutes, seconds)
+    else:
+        return '%d sec' % seconds
+
+
+if __name__ == '__main__':
+    main()

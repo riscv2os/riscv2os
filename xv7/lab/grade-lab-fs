@@ -1,0 +1,47 @@
+#!/usr/bin/env python
+
+import re
+from gradelib import *
+
+r = Runner(save("xv6.out"))
+
+@test(40, "running bigfile")
+def test_bigfile():
+    r.run_qemu(shell_script([
+        'bigfile'
+    ]), timeout=180)
+    r.match('^wrote 65803 blocks$')
+    r.match('^bigfile done; ok$')
+
+@test(0, "running symlinktest")
+def test_symlinktest():
+    r.run_qemu(shell_script([
+        'symlinktest'
+    ]), timeout=20)
+
+@test(20, "symlinktest: symlinks", parent=test_symlinktest)
+def test_symlinktest_symlinks():
+    r.match("^test symlinks: ok$")
+
+@test(20, "symlinktest: concurrent symlinks", parent=test_symlinktest)
+def test_symlinktest_symlinks():
+    r.match("^test concurrent symlinks: ok$")
+
+@test(19, "usertests")
+def test_usertests():
+    r.run_qemu(shell_script([
+        'usertests'
+    ]), timeout=300)
+    r.match('^ALL TESTS PASSED$')
+
+@test(1, "time")
+def test_time():
+    try:
+        with open('time.txt') as f:
+            d = f.read().strip()
+            if not re.match(r'^\d+$', d):
+                raise AssertionError('time.txt does not contain a single integer (number of hours spent on the lab)')
+    except IOError:
+        raise AssertionError('Cannot read time.txt')
+
+run_tests()

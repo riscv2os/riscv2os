@@ -1,0 +1,10 @@
+{
+  "name": "syscall",
+  "commit": "29413700cc70b5fc43a79b47b4cc7259579c363e",
+  "replace": [
+    "grade-lab-syscall",
+    "gradelib.py",
+    "user/usertests.c",
+    "user/alarmtest.c"
+  ]
+}

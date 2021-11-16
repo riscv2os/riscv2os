@@ -1,0 +1,10 @@
+{
+  "name": "cow",
+  "commit": "8d97b119d89ed71051241c78c1bf680df940a7ec",
+  "replace": [
+    "grade-lab-cow",
+    "gradelib.py",
+    "user/usertests.c",
+    "user/cowtest.c"
+  ]
+}

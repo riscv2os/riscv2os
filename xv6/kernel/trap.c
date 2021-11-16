@@ -45,7 +45,7 @@ usertrap(void) // 使用者中斷 (自陷 trap)
 
   // send interrupts and exceptions to kerneltrap(),
   // since we're now in the kernel.
-  w_stvec((uint64)kernelvec); // 設定中斷向量為 kernelvec ?
+  w_stvec((uint64)kernelvec); // 設定中斷向量為 kernelvec ，這樣才能從 usermode 跳回 kernel mode.
 
   struct proc *p = myproc(); // 取得目前 process
   
@@ -99,7 +99,7 @@ usertrapret(void)
   intr_off(); // 禁止裝置中斷
 
   // send syscalls, interrupts, and exceptions to trampoline.S
-  w_stvec(TRAMPOLINE + (uservec - trampoline));
+  w_stvec(TRAMPOLINE + (uservec - trampoline)); // 設定中斷向量為 uservec ，這樣才能從 kernel mode 跳回 user mode.
   // 保存 kernel 的相關暫存器
   // set up trapframe values that uservec will need when
   // the process next re-enters the kernel.

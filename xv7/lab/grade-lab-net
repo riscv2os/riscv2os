@@ -1,0 +1,44 @@
+#!/usr/bin/env python
+
+import re
+import subprocess
+from gradelib import *
+
+r = Runner(save("xv6.out"))
+
+@test(0, "running nettests")
+def test_nettest():
+    server = subprocess.Popen(["make", "server"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    r.run_qemu(shell_script([
+        'nettests'
+    ]), timeout=30)
+    server.terminate()
+    server.communicate()
+
+@test(40, "nettest: one ping", parent=test_nettest)
+def test_nettest_():
+    r.match('^testing one ping: OK$')
+
+@test(20, "nettest: single process", parent=test_nettest)
+def test_nettest_():
+    r.match('^testing single-process pings: OK$')
+
+@test(20, "nettest: multi-process", parent=test_nettest)
+def test_nettest_fork_test():
+    r.match('^testing multi-process pings: OK$')
+
+@test(19, "nettest: DNS", parent=test_nettest)
+def test_nettest_dns_test():
+    r.match('^DNS OK$')
+
+@test(1, "time")
+def test_time():
+    try:
+        with open('time.txt') as f:
+            d = f.read().strip()
+            if not re.match(r'^\d+$', d):
+                raise AssertionError('time.txt does not contain a single integer (number of hours spent on the lab)')
+    except IOError:
+        raise AssertionError('Cannot read time.txt')
+
+run_tests()

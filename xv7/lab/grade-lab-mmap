@@ -1,0 +1,39 @@
+#!/usr/bin/env python
+
+import re
+from gradelib import *
+
+r = Runner(save("xv6.out"))
+
+@test(0, "running mmaptest")
+def test_mmaptest():
+    r.run_qemu(shell_script([
+        'mmaptest'
+    ]), timeout=180)
+
+@test(40, "mmaptest: mmap_test", parent=test_mmaptest)
+def test_mmaptest_mmap_test():
+    r.match('^mmap_test OK$')
+
+@test(40, "mmaptest: fork_test", parent=test_mmaptest)
+def test_mmaptest_fork_test():
+    r.match('^fork_test OK$')
+
+@test(19, "usertests")
+def test_usertests():
+    r.run_qemu(shell_script([
+        'usertests'
+    ]), timeout=300)
+    r.match('^ALL TESTS PASSED$')
+
+@test(1, "time")
+def test_time():
+    try:
+        with open('time.txt') as f:
+            d = f.read().strip()
+            if not re.match(r'^\d+$', d):
+                raise AssertionError('time.txt does not contain a single integer (number of hours spent on the lab)')
+    except IOError:
+        raise AssertionError('Cannot read time.txt')
+
+run_tests()
