@@ -435,7 +435,7 @@ sys_exec(void) // exec(path, argv) 將目前行程更換為 path 指定的執行
       argv[i] = 0;
       break;
     }
-    argv[i] = kalloc();
+    argv[i] = kalloc(); // 每個參數都分配一頁，會不會太浪費？
     if(argv[i] == 0)
       goto bad;
     if(fetchstr(uarg, argv[i], PGSIZE) < 0)

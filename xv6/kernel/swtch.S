@@ -3,8 +3,8 @@
 #   void swtch(struct context *old, struct context *new);
 # 
 # Save current registers in old. Load from new.	
-
-
+# 問題：為何不用儲存全部暫存器？ 
+# 猜測：這應該看編譯器會用到那些暫存器當臨時變數，像是參數 a0..a7 應該就不用保存。
 .globl swtch
 swtch: # 內文切換，保存舊暫存器群，切換到新暫存器群
         sd ra, 0(a0)
