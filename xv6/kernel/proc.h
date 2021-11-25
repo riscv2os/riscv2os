@@ -42,7 +42,7 @@ extern struct cpu cpus[NCPU]; // 多核心
 // the trapframe includes callee-saved user registers like s0-s11 because the
 // return-to-user path via usertrapret() doesn't return through
 // the entire kernel call stack.
-struct trapframe { // 彈跳床 -- 讓核心與使用者行程間能順利切換的特殊分頁
+struct trapframe { // 彈跳框 -- 讓核心與使用者行程間能順利切換
   /*   0 */ uint64 kernel_satp;   // kernel page table
   /*   8 */ uint64 kernel_sp;     // top of process's kernel stack
   /*  16 */ uint64 kernel_trap;   // usertrap()
@@ -101,7 +101,7 @@ struct proc { // 行程結構
   uint64 kstack;               // Virtual address of kernel stack (該行程的核心堆疊)
   uint64 sz;                   // Size of process memory (bytes) (該行程的記憶體大小)
   pagetable_t pagetable;       // User page table (該行程的分頁表)
-  struct trapframe *trapframe; // data page for trampoline.S (該行程的彈跳床)
+  struct trapframe *; // data page for trampoline.S (該行程的彈跳床)
   struct context context;      // swtch() here to run process (該行程的內文)
   struct file *ofile[NOFILE];  // Open files (該行程打開的檔案表)
   struct inode *cwd;           // Current directory (該行程的目前工作目錄)

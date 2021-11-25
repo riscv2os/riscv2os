@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
-#include "fs.h"
+#include "ffs.h"
 
 int main(int argc, char *argv[])
 {
@@ -13,8 +13,8 @@ int main(int argc, char *argv[])
     exit(1);
   }
 
-  fs_open(argv[1]); 
-  fs_init();
-  fs_save();
-  fs_build(argc-2, &argv[2]);
+  ffs_create(argv[1]); 
+  ffs_init();
+  ffs_save();
+  ffs_build(argc-2, &argv[2]);
 }
