@@ -9,22 +9,22 @@ static char* _printint(char *text, int xx, int base, int sgn) {
 
   neg = 0;
   if(sgn && xx < 0){
-  neg = 1;
-  x = -xx;
+    neg = 1;
+    x = -xx;
   } else {
-  x = xx;
+    x = xx;
   }
 
   i = 0;
   do {
-  buf[i++] = digits[x % base];
+    buf[i++] = digits[x % base];
   }while((x /= base) != 0);
   if(neg)
-  buf[i++] = '-';
+    buf[i++] = '-';
 
   char *p = text;
   while(--i >= 0)
-  *p++ = buf[i];
+    *p++ = buf[i];
   return p;
 }
 
