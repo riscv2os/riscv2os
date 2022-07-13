@@ -1,0 +1,9 @@
+semu
+.vscode
+.dbg.
+*.o
+*.dSYM
+
+# xv6
+kernel.bin
+fs.img
